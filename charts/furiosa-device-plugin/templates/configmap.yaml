@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "furiosa-device-plugin.name" . }}-config-cm
+  namespace: {{ .Values.namespace | default "kube-system" }}
+data:
+  config.yaml: |
+    resourceStrategy: {{ .Values.config.resourceStrategy | default "generic" }}
+    debugMode: {{ .Values.config.debugMode | default "false" }}
+    disabledDeviceUUIDListMap:
+{{ toYaml (default dict .Values.config.disabledDeviceUUIDListMap) | indent 6 }}

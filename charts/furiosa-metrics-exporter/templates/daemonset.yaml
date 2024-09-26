@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "furiosa-metrics-exporter.name" . }}
+  namespace: {{ .Values.namespace | default "kube-system" }}
+  labels:
+    {{- include "furiosa-metrics-exporter.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "furiosa-metrics-exporter.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  updateStrategy:
+    {{- toYaml .Values.daemonSet.updateStrategy | nindent 4 }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "furiosa-metrics-exporter.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      priorityClassName:  {{ .Values.daemonSet.priorityClassName | default "system-node-critical" }}
+      containers:
+        - name: {{ include "furiosa-metrics-exporter.name" . }}
+          image: {{ .Values.daemonSet.image.repository | default "registry.corp.furiosa.ai/furiosa/furiosa-metrics-exporter" }}:{{ .Values.daemonSet.image.tag | default "latest" }}
+          command: ["./main"]
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: "spec.nodeName"
+          imagePullPolicy: {{ .Values.daemonSet.image.pullPolicy | default "IfNotPresent" }}
+          resources:
+            requests:
+              cpu: {{ .Values.daemonSet.resources.cpu | default "100m" }}
+              memory: {{ .Values.daemonSet.resources.memory | default "64Mi" }}
+            limits:
+              cpu: {{ .Values.daemonSet.resources.cpu | default "100m" }}
+              memory: {{ .Values.daemonSet.resources.memory | default "64Mi" }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+               - ALL
+          volumeMounts:
+            - name: dev-fs
+              mountPath: /dev
+            - name: sys-fs
+              mountPath: /sys
+      {{- with .Values.daemonSet.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.daemonSet.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: dev-fs
+          hostPath:
+            path: /dev
+        - name: sys-fs
+          hostPath:
+            path: /sys
+      {{- with .Values.daemonSet.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

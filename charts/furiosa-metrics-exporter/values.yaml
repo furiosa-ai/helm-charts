@@ -1,0 +1,39 @@
+namespace: kube-system
+
+daemonSet:
+  priorityClassName: system-node-critical
+  # Use OnDelete for change the plugin strategy
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  # add toleration as needed
+  # tolerations:
+  #   - key: furiosa.ai/npu
+  #     operator: Exists
+  # add affinity as needed
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: feature.node.kubernetes.io/pci-1200_1ed2.present
+                operator: In
+                values:
+                  - "true"
+  image:
+    repository: registry.corp.furiosa.ai/furiosa/furiosa-metrics-exporter
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    cpu: 100m
+    memory: 64Mi
+  # locate you image pull secret in your cluster
+  imagePullSecrets:
+  # - name: imagepullsecret
+
+service:
+  type: ClusterIP
+  port: 6254
+  targetPort: 6254
+  enableScrapAnnotations: true

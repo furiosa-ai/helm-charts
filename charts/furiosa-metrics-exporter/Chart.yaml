@@ -1,0 +1,6 @@
+apiVersion: v2
+name: furiosa-metrics-exporter
+description: A Helm chart for furiosa-metrics-exporter
+type: application
+version: 0.1.0
+appVersion: "1.16.0"
