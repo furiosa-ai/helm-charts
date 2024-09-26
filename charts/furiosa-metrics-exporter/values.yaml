@@ -22,7 +22,7 @@ daemonSet:
                 values:
                   - "true"
   image:
-    repository: registry.corp.furiosa.ai/furiosa/furiosa-metrics-exporter
+    repository: ghcr.io/furiosa-ai/furiosa-metrics-exporter
     tag: latest
     pullPolicy: IfNotPresent
   resources:

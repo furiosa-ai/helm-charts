@@ -21,7 +21,7 @@ daemonSet:
             values:
               - "true"
   image:
-    repository: registry.corp.furiosa.ai/furiosa/furiosa-device-plugin
+    repository: ghcr.io/furiosa-ai/furiosa-device-plugin
     tag: latest
     pullPolicy: IfNotPresent
   resources:

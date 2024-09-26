@@ -21,7 +21,7 @@ spec:
       priorityClassName:  {{ .Values.daemonSet.priorityClassName | default "system-node-critical" }}
       containers:
         - name: {{ include "furiosa-metrics-exporter.name" . }}
-          image: {{ .Values.daemonSet.image.repository | default "registry.corp.furiosa.ai/furiosa/furiosa-metrics-exporter" }}:{{ .Values.daemonSet.image.tag | default "latest" }}
+          image: {{ .Values.daemonSet.image.repository | default "ghcr.io/furiosa-ai/furiosa-metrics-exporter" }}:{{ .Values.daemonSet.image.tag | default "latest" }}
           command: ["./main"]
           env:
             - name: NODE_NAME

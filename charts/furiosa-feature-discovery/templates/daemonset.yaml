@@ -21,7 +21,7 @@ spec:
       priorityClassName:  {{ .Values.daemonSet.priorityClassName | default "system-node-critical" }}
       containers:
         - name: {{ include "furiosa-feature-discovery.name" . }}
-          image: {{ .Values.daemonSet.image.repository | default "registry.corp.furiosa.ai/furiosa/furiosa-feature-discovery" }}:{{ .Values.daemonSet.image.tag | default "latest" }}
+          image: {{ .Values.daemonSet.image.repository | default "ghcr.io/furiosa-ai/furiosa-feature-discovery" }}:{{ .Values.daemonSet.image.tag | default "latest" }}
           imagePullPolicy: {{ .Values.daemonSet.image.pullPolicy | default "IfNotPresent" }}
           workingDir: /opt/bin
           command: ["./furiosa-feature-discovery"]
