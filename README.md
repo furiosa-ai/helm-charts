@@ -5,11 +5,6 @@
 [Helm](https://helm.sh) must be installed to use the charts.
 Please refer to Helm's [documentation](https://helm.sh/docs/) to get started.
 
-```console
-helm repo add furiosa https://github.com/furiosa-ai/helm-charts
-```
-You can then run `helm search repo furiosa` to see the charts.
-
 ## License
 
 ```
