@@ -2,6 +2,17 @@ apiVersion: v1
 entries:
   furiosa-device-plugin:
   - apiVersion: v2
+    appVersion: 0.1.0
+    created: "2024-10-02T20:06:40.388960126Z"
+    description: A Helm chart for furiosa-device-plugin
+    digest: 71812ef794dd6e666b92a044d16313e3f0ed90ff1cc14d70a03c4a5081c6c520
+    kubeVersion: '>= 1.20.0-0'
+    name: furiosa-device-plugin
+    type: application
+    urls:
+    - https://github.com/furiosa-ai/helm-charts/releases/download/furiosa-device-plugin-0.1.1/furiosa-device-plugin-0.1.1.tgz
+    version: 0.1.1
+  - apiVersion: v2
     appVersion: 1.16.0
     created: "2024-10-02T19:52:21.029822292Z"
     description: A Helm chart for furiosa-device-plugin
@@ -13,6 +24,21 @@ entries:
     - https://github.com/furiosa-ai/helm-charts/releases/download/furiosa-device-plugin-0.1.0/furiosa-device-plugin-0.1.0.tgz
     version: 0.1.0
   furiosa-feature-discovery:
+  - apiVersion: v2
+    appVersion: 0.1.0
+    created: "2024-10-02T20:06:40.576599198Z"
+    dependencies:
+    - condition: node-feature-discovery.enabled
+      name: node-feature-discovery
+      repository: https://kubernetes-sigs.github.io/node-feature-discovery/charts
+      version: 0.15.3
+    description: A Helm chart for furiosa-feature-discovery
+    digest: 371de4cb9638c56cc3f190096aa4445251d9de9e5acbbbbbe850318e185860fc
+    name: furiosa-feature-discovery
+    type: application
+    urls:
+    - https://github.com/furiosa-ai/helm-charts/releases/download/furiosa-feature-discovery-0.1.1/furiosa-feature-discovery-0.1.1.tgz
+    version: 0.1.1
   - apiVersion: v2
     created: "2024-10-02T19:52:21.303215834Z"
     dependencies:
@@ -29,6 +55,16 @@ entries:
     version: 0.1.0
   furiosa-metrics-exporter:
   - apiVersion: v2
+    appVersion: 0.1.0
+    created: "2024-10-02T20:06:40.74679387Z"
+    description: A Helm chart for furiosa-metrics-exporter
+    digest: faaee4fe5d2c79c3f00eba1bd37f74587a088807b8ceee3e004a35b38518e7ab
+    name: furiosa-metrics-exporter
+    type: application
+    urls:
+    - https://github.com/furiosa-ai/helm-charts/releases/download/furiosa-metrics-exporter-0.1.1/furiosa-metrics-exporter-0.1.1.tgz
+    version: 0.1.1
+  - apiVersion: v2
     appVersion: 1.16.0
     created: "2024-10-02T19:52:21.483535819Z"
     description: A Helm chart for furiosa-metrics-exporter
@@ -38,4 +74,4 @@ entries:
     urls:
     - https://github.com/furiosa-ai/helm-charts/releases/download/furiosa-metrics-exporter-0.1.0/furiosa-metrics-exporter-0.1.0.tgz
     version: 0.1.0
-generated: "2024-10-02T19:52:21.483546429Z"
+generated: "2024-10-02T20:06:40.746809169Z"
