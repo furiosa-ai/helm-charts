@@ -1,0 +1,41 @@
+apiVersion: v1
+entries:
+  furiosa-device-plugin:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2024-10-02T19:52:21.029822292Z"
+    description: A Helm chart for furiosa-device-plugin
+    digest: 91a59c62684ec1b50c30b7de4f3fec2132ed41c455b97324ca3476952ecec6d1
+    kubeVersion: '>= 1.20.0-0'
+    name: furiosa-device-plugin
+    type: application
+    urls:
+    - https://github.com/furiosa-ai/helm-charts/releases/download/furiosa-device-plugin-0.1.0/furiosa-device-plugin-0.1.0.tgz
+    version: 0.1.0
+  furiosa-feature-discovery:
+  - apiVersion: v2
+    created: "2024-10-02T19:52:21.303215834Z"
+    dependencies:
+    - condition: node-feature-discovery.enabled
+      name: node-feature-discovery
+      repository: https://kubernetes-sigs.github.io/node-feature-discovery/charts
+      version: 0.15.3
+    description: A Helm chart for furiosa-feature-discovery
+    digest: f9a560716c633f49958d1c062a2191f1a90bb6637fa8c5747a039a4b4015aeda
+    name: furiosa-feature-discovery
+    type: application
+    urls:
+    - https://github.com/furiosa-ai/helm-charts/releases/download/furiosa-feature-discovery-0.1.0/furiosa-feature-discovery-0.1.0.tgz
+    version: 0.1.0
+  furiosa-metrics-exporter:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2024-10-02T19:52:21.483535819Z"
+    description: A Helm chart for furiosa-metrics-exporter
+    digest: ce90dc39d93df6a330cdcc0987c91de205451eba0d1c63762100f446c32208c6
+    name: furiosa-metrics-exporter
+    type: application
+    urls:
+    - https://github.com/furiosa-ai/helm-charts/releases/download/furiosa-metrics-exporter-0.1.0/furiosa-metrics-exporter-0.1.0.tgz
+    version: 0.1.0
+generated: "2024-10-02T19:52:21.483546429Z"
