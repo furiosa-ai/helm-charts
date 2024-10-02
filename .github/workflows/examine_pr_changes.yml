@@ -38,7 +38,7 @@ jobs:
       - name: create kind cluster
         uses: helm/kind-action@v1.8.0
         with:
-          cluster_name: device-plugin-e2e-${{ matrix.k8s-version }}
+          cluster_name: helm-charts-test-${{ matrix.k8s-version }}
           config: .github/workflows/kind_config/kind_${{ matrix.k8s-version }}.yaml
           kubectl_version: ${{ matrix.k8s-version }}
       - name: try install
