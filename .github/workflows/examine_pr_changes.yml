@@ -41,4 +41,4 @@ jobs:
         run: |
           kubectl wait --for=condition=Ready nodes --all --timeout=300s
       - name: try install
-        run: ct install --chart-dirs charts --charts charts/furiosa-device-plugin,charts/furiosa-feature-discovery,charts/furiosa-metrics-exporter --namespace kube-system
+        run: ct install --chart-dirs charts --charts charts/furiosa-device-plugin,charts/furiosa-feature-discovery,charts/furiosa-metrics-exporter --namespace kube-system  --helm-extra-args '--timeout 500s'
