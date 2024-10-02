@@ -29,6 +29,9 @@ jobs:
           check-latest: true
       - name: setup helm env
         uses: helm/chart-testing-action@v2.6.0
+      - name: Add dependency chart repos
+        run: |
+          helm repo add nfd https://kubernetes-sigs.github.io/node-feature-discovery/charts
       - name: helm lint
         run: ct lint --chart-dirs=charts --target-branch=${{ github.event.repository.default_branch }} --validate-maintainers=false --check-version-increment=false
       - name: create kind cluster
