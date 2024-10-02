@@ -42,4 +42,4 @@ jobs:
           config: .github/workflows/kind_config/kind_${{ matrix.k8s-version }}.yaml
           kubectl_version: ${{ matrix.k8s-version }}
       - name: try install
-        run: ct install --chart-dirs charts --charts charts/furiosa-device-plugin,charts/furiosa-feature-discovery,charts/furiosa-metrics-exporter -namespace kube-system
+        run: ct install --chart-dirs charts --charts charts/furiosa-device-plugin,charts/furiosa-feature-discovery,charts/furiosa-metrics-exporter --namespace kube-system
