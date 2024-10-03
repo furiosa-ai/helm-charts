@@ -9,7 +9,20 @@ on:
     branches: [ "main" ]
 
 jobs:
-  helm:
+  chart-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: setup helm env
+        uses: helm/chart-testing-action@v2.6.0
+      - name: helm lint
+        run: ct lint --validate-maintainers=false --target-branch main
+
+  chart-test-with-kind:
+    needs: chart-lint
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -18,25 +31,17 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - name: create kind cluster
         uses: helm/kind-action@v1.8.0
         with:
           cluster_name: helm-charts-test-${{ matrix.k8s-version }}
           config: .github/workflows/kind_config/kind_${{ matrix.k8s-version }}.yaml
           kubectl_version: ${{ matrix.k8s-version }}
-      - name: Set up Helm
-        uses: azure/setup-helm@v3
-        with:
-          version: v3.12.1
       - name: setup helm env
         uses: helm/chart-testing-action@v2.6.0
       - name: Add dependency chart repos
         run: |
           helm repo add nfd https://kubernetes-sigs.github.io/node-feature-discovery/charts
-      - name: helm lint
-        run: ct lint --chart-dirs=charts --target-branch=${{ github.event.repository.default_branch }} --validate-maintainers=false --check-version-increment=true --charts charts/furiosa-device-plugin,charts/furiosa-feature-discovery,charts/furiosa-metrics-exporter
       - name: Wait for nodes to be ready
         run: |
           kubectl wait --for=condition=Ready nodes --all --timeout=300s
