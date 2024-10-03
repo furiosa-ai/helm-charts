@@ -12,6 +12,14 @@ helm repo add furiosa https://furiosa-ai.github.io/helm-charts
 ```
 You can then run `helm search repo furiosa` to see the charts.
 
+## Known Issues
+
+### furiosa-feature-discovery
+- If you’re using a Kubernetes cluster with a version lower than v1.24, installing the furiosa-feature-discovery Helm chart may fail due to a resource version issue with its dependency chart node-feature-discovery.
+  To work around this, manually install an older version of node-feature-discovery on your cluster.
+  Then, in the [values.yaml](charts/furiosa-feature-discovery/values.yaml) file of the furiosa-feature-discovery chart, set `node-feature-discovery.enabled` to `false` to prevent automatic installation.
+
+
 
 ## License
 
