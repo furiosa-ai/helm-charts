@@ -2,10 +2,10 @@ name: Helm
 
 on:
   push:
-    #paths: ["charts/**"]
+    paths: ["charts/**"]
     branches: [ "main" ]
   pull_request:
-    #paths: ["charts/**"]
+    paths: ["charts/**"]
     branches: [ "main" ]
 
 jobs:
