@@ -21,7 +21,7 @@ daemonSet:
             values:
               - "true"
   image:
-    repository: ghcr.io/furiosa-ai/furiosa-device-plugin
+    repository: docker.io/furiosaai/furiosa-device-plugin
     tag: latest
     pullPolicy: IfNotPresent
   resources:
