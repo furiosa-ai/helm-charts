@@ -20,7 +20,7 @@ daemonSet:
                 values:
                   - "true"
   image:
-    repository: ghcr.io/furiosa-ai/furiosa-feature-discovery
+    repository: docker.io/furiosaai/furiosa-feature-discovery
     tag: latest
     pullPolicy: IfNotPresent
   # add your pull secret as needed

@@ -21,7 +21,7 @@ spec:
       priorityClassName:  {{ .Values.daemonSet.priorityClassName | default "system-node-critical" }}
       containers:
         - name: {{ include "furiosa-device-plugin.name" . }}
-          image: {{ .Values.daemonSet.image.repository | default "ghcr.io/furiosa-ai/furiosa-device-plugin" }}:{{ .Values.daemonSet.image.tag | default "latest" }}
+          image: {{ .Values.daemonSet.image.repository | default "docker.io/furiosaai/furiosa-device-plugin" }}:{{ .Values.daemonSet.image.tag | default "latest" }}
           command: ["./main"]
           env:
           - name: NODE_NAME
