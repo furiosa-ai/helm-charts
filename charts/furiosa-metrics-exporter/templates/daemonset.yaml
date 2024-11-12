@@ -21,13 +21,21 @@ spec:
       priorityClassName:  {{ .Values.daemonSet.priorityClassName | default "system-node-critical" }}
       containers:
         - name: {{ include "furiosa-metrics-exporter.name" . }}
-          image: {{ .Values.daemonSet.image.repository | default "docker.io/furiosaai/furiosa-metrics-exporter" }}:{{ .Values.daemonSet.image.tag | default "latest" }}
-          command: ["./main"]
+          image: {{ .Values.daemonSet.image.repository | default "registry.corp.furiosa.ai/furiosa/furiosa-metrics-exporter" }}:{{ .Values.daemonSet.image.tag | default "latest" }}
+          command:
+            - ./main
+            - --port=$PORT
+            - --interval=$INTERVAL
+            - --node-name=$NODE_NAME
           env:
             - name: NODE_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: "spec.nodeName"
+            - name: PORT
+              value: "{{ .Values.service.targetPort }}"
+            - name: INTERVAL
+              value: "{{ .Values.config.collectInterval }}"
           imagePullPolicy: {{ .Values.daemonSet.image.pullPolicy | default "IfNotPresent" }}
           resources:
             requests:
