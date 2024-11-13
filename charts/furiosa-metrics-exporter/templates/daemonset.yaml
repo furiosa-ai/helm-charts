@@ -24,9 +24,9 @@ spec:
           image: {{ .Values.daemonSet.image.repository | default "registry.corp.furiosa.ai/furiosa/furiosa-metrics-exporter" }}:{{ .Values.daemonSet.image.tag | default "latest" }}
           command:
             - ./main
-            - --port=$PORT
-            - --interval=$INTERVAL
-            - --node-name=$NODE_NAME
+            - --port=$(PORT)
+            - --interval=$(INTERVAL)
+            - --node-name=$(NODE_NAME)
           env:
             - name: NODE_NAME
               valueFrom:
