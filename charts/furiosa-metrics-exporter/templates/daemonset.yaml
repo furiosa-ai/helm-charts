@@ -22,8 +22,7 @@ spec:
       containers:
         - name: {{ include "furiosa-metrics-exporter.name" . }}
           image: {{ .Values.daemonSet.image.repository | default "registry.corp.furiosa.ai/furiosa/furiosa-metrics-exporter" }}:{{ .Values.daemonSet.image.tag | default "latest" }}
-          command:
-            - ./main
+          args:
             - --port=$(PORT)
             - --interval=$(INTERVAL)
             - --node-name=$(NODE_NAME)
