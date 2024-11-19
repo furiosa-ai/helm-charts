@@ -82,6 +82,16 @@ entries:
   furiosa-metrics-exporter:
   - apiVersion: v2
     appVersion: 0.1.0
+    created: "2024-11-19T05:48:45.266999233Z"
+    description: A Helm chart for furiosa-metrics-exporter
+    digest: 75321d27e3e1a3fd877253e8d5f167ec5d5d54f7d0baf4f2a02fdd8859505efd
+    name: furiosa-metrics-exporter
+    type: application
+    urls:
+    - https://github.com/furiosa-ai/helm-charts/releases/download/furiosa-metrics-exporter-0.1.3/furiosa-metrics-exporter-0.1.3.tgz
+    version: 0.1.3
+  - apiVersion: v2
+    appVersion: 0.1.0
     created: "2024-10-04T05:58:42.456329371Z"
     description: A Helm chart for furiosa-metrics-exporter
     digest: a0d03176b70e4bf5c0ca37cd3a7fdab73204e982c9845b62e4841abfbe5f54fd
@@ -110,4 +120,4 @@ entries:
     urls:
     - https://github.com/furiosa-ai/helm-charts/releases/download/furiosa-metrics-exporter-0.1.0/furiosa-metrics-exporter-0.1.0.tgz
     version: 0.1.0
-generated: "2024-10-04T05:58:42.456360459Z"
+generated: "2024-11-19T05:48:45.267027065Z"
