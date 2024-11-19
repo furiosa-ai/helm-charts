@@ -37,3 +37,6 @@ service:
   port: 6254
   targetPort: 6254
   enableScrapAnnotations: true
+
+config:
+  collectInterval: 10
