@@ -22,6 +22,8 @@ spec:
       containers:
         - name: {{ include "furiosa-metrics-exporter.name" . }}
           image: {{ .Values.daemonSet.image.repository | default "docker.io/furiosaai/furiosa-metrics-exporter" }}:{{ .Values.daemonSet.image.tag | default "latest" }}
+          command:
+            - ./main
           args:
             - --port=$(PORT)
             - --interval=$(INTERVAL)
