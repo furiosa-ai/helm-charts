@@ -32,3 +32,8 @@ daemonSet:
 
 node-feature-discovery:
   enabled: true
+  # add toleration as needed
+  # worker:
+  #   tolerations:
+  #     - key: "furiosa.ai/npu"
+  #       operator: "Exists"
