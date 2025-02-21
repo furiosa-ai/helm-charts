@@ -1,5 +1,7 @@
 namespace: kube-system
 
+kubeletPath: "/var/lib/kubelet/pod-resources"
+
 daemonSet:
   priorityClassName: system-node-critical
   # Use OnDelete for change the plugin strategy
