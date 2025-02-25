@@ -32,8 +32,8 @@ daemonSet:
    # - name: imagepullsecret
 
 config:
-  resourceStrategy: generic
+  partitioning: none
   debugMode: false
-  disabledDeviceUUIDListMap:
+  disabledDeviceUUIDs:
    # node:
    #   - "uuid"

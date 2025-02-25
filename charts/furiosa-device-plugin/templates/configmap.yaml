@@ -5,7 +5,7 @@ metadata:
   namespace: {{ .Values.namespace | default "kube-system" }}
 data:
   config.yaml: |
-    resourceStrategy: {{ .Values.config.resourceStrategy | default "generic" }}
+    partitioning: {{ .Values.config.partitioning | default "generic" }}
     debugMode: {{ .Values.config.debugMode | default "false" }}
-    disabledDeviceUUIDListMap:
-{{ toYaml (default dict .Values.config.disabledDeviceUUIDListMap) | indent 6 }}
+    disabledDeviceUUIDs:
+{{ toYaml (default dict .Values.config.disabledDeviceUUIDs) | indent 6 }}
