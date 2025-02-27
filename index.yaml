@@ -3,6 +3,17 @@ entries:
   furiosa-device-plugin:
   - apiVersion: v2
     appVersion: 0.1.0
+    created: "2025-02-27T04:12:49.031901873Z"
+    description: A Helm chart for furiosa-device-plugin
+    digest: e74e8bbce2b2b8513c1f556bebb372c16783011d08370f5e25a9d83049383037
+    kubeVersion: '>= 1.20.0-0'
+    name: furiosa-device-plugin
+    type: application
+    urls:
+    - https://github.com/furiosa-ai/helm-charts/releases/download/furiosa-device-plugin-0.1.3/furiosa-device-plugin-0.1.3.tgz
+    version: 0.1.3
+  - apiVersion: v2
+    appVersion: 0.1.0
     created: "2024-10-04T05:58:42.16523446Z"
     description: A Helm chart for furiosa-device-plugin
     digest: f1526b9e7e87ce047ef03ca9f0a98ac1e4d9742e36701b0e55ccf211eff88906
@@ -145,4 +156,4 @@ entries:
     urls:
     - https://github.com/furiosa-ai/helm-charts/releases/download/furiosa-metrics-exporter-0.1.0/furiosa-metrics-exporter-0.1.0.tgz
     version: 0.1.0
-generated: "2025-02-21T02:03:26.028953127Z"
+generated: "2025-02-27T04:12:49.031954282Z"
