@@ -3,4 +3,4 @@ name: furiosa-metrics-exporter
 description: A Helm chart for furiosa-metrics-exporter
 type: application
 version: 0.1.4
-appVersion: "0.1.0"
+appVersion: 2025.1.0
