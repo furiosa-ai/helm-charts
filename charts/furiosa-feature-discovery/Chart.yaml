@@ -2,8 +2,8 @@ apiVersion: v2
 name: furiosa-feature-discovery
 description: A Helm chart for furiosa-feature-discovery
 type: application
-version: 0.1.4
-appVersion: 2025.1.0
+version: 2025.1.0
+appVersion: "0.1.0"
 
 dependencies:
   - name: node-feature-discovery
