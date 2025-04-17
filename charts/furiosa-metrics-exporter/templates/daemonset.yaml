@@ -51,6 +51,9 @@ spec:
               drop:
                - ALL
           volumeMounts:
+            - name: "pod-gpu-resources"
+              readOnly: true
+              mountPath: "/var/lib/kubelet/pod-resources"
             - name: dev-fs
               mountPath: /dev
             - name: sys-fs
@@ -64,6 +67,9 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
+        - name: "pod-gpu-resources"
+          hostPath:
+            path: {{ .Values.kubeletPath }}
         - name: dev-fs
           hostPath:
             path: /dev
