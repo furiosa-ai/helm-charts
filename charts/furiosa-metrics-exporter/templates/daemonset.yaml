@@ -40,11 +40,11 @@ spec:
           imagePullPolicy: {{ .Values.daemonSet.image.pullPolicy | default "IfNotPresent" }}
           resources:
             requests:
-              cpu: {{ .Values.daemonSet.resources.cpu | default "100m" }}
-              memory: {{ .Values.daemonSet.resources.memory | default "64Mi" }}
+              cpu: {{ .Values.daemonSet.resources.cpu | default "1000m" }}
+              memory: {{ .Values.daemonSet.resources.memory | default "128Mi" }}
             limits:
-              cpu: {{ .Values.daemonSet.resources.cpu | default "100m" }}
-              memory: {{ .Values.daemonSet.resources.memory | default "64Mi" }}
+              cpu: {{ .Values.daemonSet.resources.cpu | default "1000m" }}
+              memory: {{ .Values.daemonSet.resources.memory | default "128Mi" }}
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
