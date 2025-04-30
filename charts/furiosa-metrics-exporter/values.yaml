@@ -23,7 +23,7 @@ daemonSet:
                   - "true"
   image:
     repository: docker.io/furiosaai/furiosa-metrics-exporter
-    tag: 2025.1.0
+    tag: 2025.2.0
     pullPolicy: IfNotPresent
   resources:
     cpu: 1000m
@@ -40,3 +40,4 @@ service:
 
 config:
   collectInterval: 10
+  kubeResourcesLabel: true
