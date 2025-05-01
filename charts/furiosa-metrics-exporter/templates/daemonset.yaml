@@ -28,6 +28,7 @@ spec:
             - --port=$(PORT)
             - --interval=$(INTERVAL)
             - --node-name=$(NODE_NAME)
+            - --kube-resources-label=$(KUBE_RESOURCES_LABEL)
           env:
             - name: NODE_NAME
               valueFrom:
@@ -37,14 +38,16 @@ spec:
               value: "{{ .Values.service.targetPort }}"
             - name: INTERVAL
               value: "{{ .Values.config.collectInterval }}"
+            - name: KUBE_RESOURCES_LABEL
+              value: "{{ .Values.config.kubeResourcesLabel }}"
           imagePullPolicy: {{ .Values.daemonSet.image.pullPolicy | default "IfNotPresent" }}
           resources:
             requests:
-              cpu: {{ .Values.daemonSet.resources.cpu | default "100m" }}
-              memory: {{ .Values.daemonSet.resources.memory | default "64Mi" }}
+              cpu: {{ .Values.daemonSet.resources.cpu | default "1000m" }}
+              memory: {{ .Values.daemonSet.resources.memory | default "128Mi" }}
             limits:
-              cpu: {{ .Values.daemonSet.resources.cpu | default "100m" }}
-              memory: {{ .Values.daemonSet.resources.memory | default "64Mi" }}
+              cpu: {{ .Values.daemonSet.resources.cpu | default "1000m" }}
+              memory: {{ .Values.daemonSet.resources.memory | default "128Mi" }}
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
