@@ -58,6 +58,8 @@ spec:
               mountPath: /dev
             - name: sys-fs
               mountPath: /sys
+            - name: pod-resource-api
+              mountPath: /var/lib/kubelet/pod-resources/
       {{- with .Values.daemonSet.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
@@ -73,6 +75,9 @@ spec:
         - name: sys-fs
           hostPath:
             path: /sys
+        - name: pod-resource-api
+          hostPath:
+            path: /var/lib/kubelet/pod-resources/
       {{- with .Values.daemonSet.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
