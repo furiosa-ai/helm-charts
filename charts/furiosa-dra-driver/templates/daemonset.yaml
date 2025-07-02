@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "furiosa-dra-driver.fullname" . }}-kubeletplugin
+  namespace: {{ .Values.namespace | default "kube-system" }}
+  labels:
+    {{- include "furiosa-dra-driver.labels" . | nindent 4 }}
+    app.kubernetes.io/component: kubeletplugin
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "furiosa-dra-driver.fullname" . }}-kubeletplugin
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  updateStrategy:
+    {{- toYaml .Values.daemonSet.updateStrategy | nindent 4 }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "furiosa-dra-driver.fullname" . }}-kubeletplugin
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      priorityClassName: {{ .Values.daemonSet.priorityClassName | default "system-node-critical" }}
+      serviceAccountName: {{ include "furiosa-dra-driver.serviceAccountName" . }}
+      {{- with .Values.daemonSet.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: plugin
+          image: {{ .Values.daemonSet.image.repository }}:{{ .Values.daemonSet.image.tag }}
+          imagePullPolicy: {{ .Values.daemonSet.image.pullPolicy }}
+          command:
+            - ./dra-kubelet-plugin
+          args:
+            - "--node-name=$(NODE_NAME)"
+            - "--cdi-root=$(CDI_ROOT)"
+          env:
+            - name: CDI_ROOT
+              value: /var/run/cdi
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          resources:
+            requests:
+              cpu: {{ .Values.daemonSet.resources.cpu }}
+              memory: {{ .Values.daemonSet.resources.memory }}
+            limits:
+              cpu: {{ .Values.daemonSet.resources.cpu }}
+              memory: {{ .Values.daemonSet.resources.memory }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: plugins-registry
+              mountPath: /var/lib/kubelet/plugins_registry
+            - name: plugins
+              mountPath: /var/lib/kubelet/plugins
+            - name: cdi
+              mountPath: /var/run/cdi
+            - name: dev-fs
+              mountPath: /dev
+            - name: sys-fs
+              mountPath: /sys
+      volumes:
+        - name: plugins-registry
+          hostPath:
+            path: /var/lib/kubelet/plugins_registry
+        - name: plugins
+          hostPath:
+            path: /var/lib/kubelet/plugins
+        - name: cdi
+          hostPath:
+            path: /var/run/cdi
+        - name: dev-fs
+          hostPath:
+            path: /dev
+        - name: sys-fs
+          hostPath:
+            path: /sys
+      {{- with .Values.daemonSet.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.daemonSet.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
