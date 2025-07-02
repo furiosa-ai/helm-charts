@@ -1,0 +1,36 @@
+namespace: kube-system
+
+serviceAccount:
+  create: true
+
+daemonSet:
+  priorityClassName: system-node-critical
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  # add toleration as needed
+  # tolerations:
+  #  - key: furiosa.ai/npu
+  #    operator: Exists
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: feature.node.kubernetes.io/pci-1200_1ed2.present
+                operator: In
+                values:
+                  - "true"
+
+  image:
+    repository: docker.io/furiosaai/furiosa-dra-driver
+    tag: 2025.2.0
+    pullPolicy: IfNotPresent
+
+  resources:
+    cpu: 100m
+    memory: 64Mi
+
+  imagePullSecrets:
+  # - name: imagepullsecret
