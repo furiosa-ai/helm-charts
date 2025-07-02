@@ -67,6 +67,17 @@ entries:
     urls:
     - https://github.com/furiosa-ai/helm-charts/releases/download/furiosa-device-plugin-0.1.0/furiosa-device-plugin-0.1.0.tgz
     version: 0.1.0
+  furiosa-dra-driver:
+  - apiVersion: v2
+    appVersion: 0.1.0
+    created: "2025-07-02T19:20:23.861151912Z"
+    description: A Helm chart for furiosa-dra-driver
+    digest: 66b366279b590fe113a4c8d8ac94aaf76290395ec3fb2f6524b837493a038a2c
+    name: furiosa-dra-driver
+    type: application
+    urls:
+    - https://github.com/furiosa-ai/helm-charts/releases/download/furiosa-dra-driver-2025.2.0/furiosa-dra-driver-2025.2.0.tgz
+    version: 2025.2.0
   furiosa-feature-discovery:
   - apiVersion: v2
     appVersion: 0.1.0
@@ -228,4 +239,4 @@ entries:
     urls:
     - https://github.com/furiosa-ai/helm-charts/releases/download/furiosa-metrics-exporter-0.1.0/furiosa-metrics-exporter-0.1.0.tgz
     version: 0.1.0
-generated: "2025-05-21T07:33:43.786119632Z"
+generated: "2025-07-02T19:20:23.861200433Z"
