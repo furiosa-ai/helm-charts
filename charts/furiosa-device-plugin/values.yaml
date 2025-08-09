@@ -22,7 +22,7 @@ daemonSet:
               - "true"
   image:
     repository: docker.io/furiosaai/furiosa-device-plugin
-    tag: 2025.2.0
+    tag: 2025.3.0
     pullPolicy: IfNotPresent
   resources:
     cpu: 100m
