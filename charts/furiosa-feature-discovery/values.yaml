@@ -21,7 +21,7 @@ daemonSet:
                   - "true"
   image:
     repository: docker.io/furiosaai/furiosa-feature-discovery
-    tag: 2025.2.0
+    tag: 2025.3.0
     pullPolicy: IfNotPresent
   # add your pull secret as needed
   # imagePullSecrets:

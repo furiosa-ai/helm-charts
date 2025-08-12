@@ -25,7 +25,7 @@ daemonSet:
 
   image:
     repository: docker.io/furiosaai/furiosa-dra-driver
-    tag: 2025.2.0
+    tag: 2025.3.0
     pullPolicy: IfNotPresent
 
   resources:
