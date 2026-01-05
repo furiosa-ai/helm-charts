@@ -3,7 +3,7 @@ name: furiosa-npu-operator
 description: A Helm chart for `furiosa-npu-operator`
 type: application
 
-version: 0.0.1
+version: 2025.4.0-rc0
 appVersion: 2025.4.0-rc0
 
 dependencies:
