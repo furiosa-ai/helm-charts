@@ -981,7 +981,7 @@ spec:
                           type: string
                       type: object
                     enabled:
-                      default: true
+                      default: false
                       description: Enabled indicates whether to deploy the `furiosa-device-plugin`
                         DaemonSet on target nodes.
                       type: boolean
@@ -1399,7 +1399,7 @@ spec:
                     related to `furiosa-feature-discovery`.
                   properties:
                     enabled:
-                      default: true
+                      default: false
                       description: Enabled indicates whether to deploy the `furiosa-feature-discovery`
                         DaemonSet on target nodes.
                       type: boolean
@@ -1644,7 +1644,7 @@ spec:
                           type: string
                       type: object
                     enabled:
-                      default: true
+                      default: false
                       description: Enabled indicates whether to deploy the `furiosa-metrics-exporter`
                         DaemonSet on target nodes.
                       type: boolean
@@ -1861,17 +1861,17 @@ spec:
                     related to `furiosa-system-manager`.
                   properties:
                     disableDriverInstall:
-                      default: true
+                      default: false
                       description: DisableDriverInstall indicates whether to disable
                         driver installation during system manager execution.
                       type: boolean
                     disableFirmwareInstall:
-                      default: false
+                      default: true
                       description: DisableFirmwareInstall indicates whether to disable
                         firmware installation during system manager execution.
                       type: boolean
                     enabled:
-                      default: true
+                      default: false
                       description: Enabled indicates whether to deploy the `furiosa-system-manager`
                         DaemonSet on target nodes.
                       type: boolean
@@ -2201,4 +2201,4 @@ spec:
       served: true
       storage: true
       subresources:
-        status: { }
+        status: {}
