@@ -28,8 +28,21 @@ rules:
   - apiGroups:
       - apps
     resources:
+      - deployments
       - daemonsets
       - controllerrevisions
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
     verbs:
       - get
       - list
