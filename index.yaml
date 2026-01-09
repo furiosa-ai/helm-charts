@@ -285,4 +285,20 @@ entries:
     urls:
     - https://github.com/furiosa-ai/helm-charts/releases/download/furiosa-metrics-exporter-0.1.0/furiosa-metrics-exporter-0.1.0.tgz
     version: 0.1.0
-generated: "2025-08-12T07:32:16.290363797Z"
+  furiosa-npu-operator:
+  - apiVersion: v2
+    appVersion: 2026.1.0-rc0
+    created: "2026-01-09T08:30:19.37636147Z"
+    dependencies:
+    - condition: node-feature-discovery.enabled
+      name: node-feature-discovery
+      repository: https://kubernetes-sigs.github.io/node-feature-discovery/charts
+      version: 0.17.2
+    description: A Helm chart for `furiosa-npu-operator`
+    digest: 40eeda44f8c08e891b11dc73af369f9963f00338ace139fbc14c77198e0a0feb
+    name: furiosa-npu-operator
+    type: application
+    urls:
+    - https://github.com/furiosa-ai/helm-charts/releases/download/furiosa-npu-operator-2026.1.0-rc0/furiosa-npu-operator-2026.1.0-rc0.tgz
+    version: 2026.1.0-rc0
+generated: "2026-01-09T08:30:19.376420189Z"
