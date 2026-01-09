@@ -1,4 +1,10 @@
-namespace: kube-system
+image:
+  repository: asia-northeast3-docker.pkg.dev/next-gen-infra/furiosa-ai/furiosa-dra-driver
+  pullPolicy: IfNotPresent
+  tag: ""  # If empty, AppVersion will be used as a tag.
+
+imagePullSecrets: []
+# - name: "docker-secret"
 
 serviceAccount:
   create: true
@@ -23,14 +29,18 @@ daemonSet:
                 values:
                   - "true"
 
-  image:
-    repository: docker.io/furiosaai/furiosa-dra-driver
-    tag: 2025.3.0
-    pullPolicy: IfNotPresent
+  resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
 
-  resources:
-    cpu: 100m
-    memory: 64Mi
+  # add toleration as needed
+  tolerations: []
+  #  - key: furiosa.ai/npu
+  #    operator: Exists
 
-  imagePullSecrets:
-  # - name: imagepullsecret
+deviceClass:
+  name: npu.furiosa.ai

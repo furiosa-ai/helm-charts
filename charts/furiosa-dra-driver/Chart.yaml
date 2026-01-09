@@ -2,5 +2,5 @@ apiVersion: v2
 name: furiosa-dra-driver
 description: A Helm chart for furiosa-dra-driver
 type: application
-version: 2025.3.0
-appVersion: "0.1.0"
+version: 2026.1.0-rc0
+appVersion: 2026.1.0-rc0
