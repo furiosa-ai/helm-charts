@@ -1,28 +1,26 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: {{ include "furiosa-feature-discovery.name" . }}
-  namespace: {{ .Values.namespace | default "kube-system" }}
-  labels:
-    {{- include "furiosa-feature-discovery.labels" . | nindent 4 }}
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "furiosa-feature-discovery.name" . }}
+      app.kubernetes.io/name: furiosa-feature-discovery
       app.kubernetes.io/instance: {{ .Release.Name }}
   updateStrategy:
-    {{- toYaml .Values.daemonSet.updateStrategy | nindent 4 }}
+    {{ toYaml .Values.daemonSet.updateStrategy | nindent 4 }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ include "furiosa-feature-discovery.name" . }}
+        app.kubernetes.io/name: furiosa-feature-discovery
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
       priorityClassName:  {{ .Values.daemonSet.priorityClassName | default "system-node-critical" }}
       containers:
-        - name: {{ include "furiosa-feature-discovery.name" . }}
-          image: {{ .Values.daemonSet.image.repository | default "docker.io/furiosaai/furiosa-feature-discovery" }}:{{ .Values.daemonSet.image.tag | default "latest" }}
-          imagePullPolicy: {{ .Values.daemonSet.image.pullPolicy | default "IfNotPresent" }}
+        - name: furiosa-feature-discovery
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           workingDir: /opt/bin
           command: ["./furiosa-feature-discovery"]
           args: [
@@ -36,13 +34,10 @@ spec:
                   fieldPath: "spec.nodeName"
             - name: RUST_LOG
               value: "info"
+          {{- with .Values.daemonSet.resources }}
           resources:
-            requests:
-              cpu: {{ .Values.daemonSet.resources.cpu | default "100m" }}
-              memory: {{ .Values.daemonSet.resources.memory | default "64Mi" }}
-            limits:
-              cpu: {{ .Values.daemonSet.resources.cpu | default "100m" }}
-              memory: {{ .Values.daemonSet.resources.memory | default "64Mi" }}
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
             # capabilities:
@@ -57,11 +52,11 @@ spec:
               mountPath: "/etc/kubernetes/node-feature-discovery/features.d/"
       {{- with .Values.daemonSet.affinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
+        {{ toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.daemonSet.imagePullSecrets }}
+      {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
+        {{ toYaml . | nindent 8 }}
       {{- end }}
       volumes:
         - name: sys
@@ -75,5 +70,5 @@ spec:
             path: "/etc/kubernetes/node-feature-discovery/features.d/"
       {{- with .Values.daemonSet.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
+        {{ toYaml . | nindent 8 }}
       {{- end }}
