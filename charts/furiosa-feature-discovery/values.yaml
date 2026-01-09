@@ -1,4 +1,10 @@
-namespace: kube-system
+image:
+  repository: asia-northeast3-docker.pkg.dev/next-gen-infra/furiosa-ai/furiosa-feature-discovery
+  pullPolicy: IfNotPresent
+  tag: ""  # If empty, AppVersion will be used as a tag.
+
+imagePullSecrets: []
+# - name: "docker-secret"
 
 daemonSet:
   priorityClassName: system-node-critical
@@ -6,10 +12,6 @@ daemonSet:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 1
-  # add toleration as needed
-  # tolerations:
-  #  - key: furiosa.ai/npu
-  #    operator: Exists
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -19,16 +21,19 @@ daemonSet:
                 operator: In
                 values:
                   - "true"
-  image:
-    repository: docker.io/furiosaai/furiosa-feature-discovery
-    tag: 2025.3.0
-    pullPolicy: IfNotPresent
-  # add your pull secret as needed
-  # imagePullSecrets:
-  #   - name: furiosa-login-secret
-  resources:
-    cpu: 100m
-    memory: 64Mi
+
+  resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+  # add toleration as needed
+  tolerations: []
+  #  - key: furiosa.ai/npu
+  #    operator: Exists
 
 node-feature-discovery:
   enabled: true
