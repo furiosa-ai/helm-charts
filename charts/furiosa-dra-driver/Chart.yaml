@@ -4,3 +4,4 @@ description: A Helm chart for furiosa-dra-driver
 type: application
 version: 2026.1.0-rc0
 appVersion: 2026.1.0-rc0
+kubeVersion: ">= 1.34.0"
