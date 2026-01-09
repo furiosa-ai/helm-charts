@@ -1,0 +1,32 @@
+image:
+  repository: asia-northeast3-docker.pkg.dev/next-gen-infra/furiosa-ai/furiosa-npu-operator
+  pullPolicy: IfNotPresent
+  tag: ""  # If empty, AppVersion will be used as a tag.
+
+imagePullSecrets: []
+# - name: "docker-secret"
+
+operator:
+  replicas: 1
+  metricsPort: 8443
+  healthCheckPort: 8081
+
+service:
+  type: ClusterIP
+  port: 8443
+
+resources: {}
+# limits:
+#   cpu: 100m
+#   memory: 128Mi
+# requests:
+#   cpu: 100m
+#   memory: 128Mi
+
+node-feature-discovery:
+  enabled: false
+  # add toleration as needed
+  # worker:
+  #   tolerations:
+  #     - key: "furiosa.ai/npu"
+  #       operator: "Exists"
