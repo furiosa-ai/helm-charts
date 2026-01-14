@@ -7,6 +7,6 @@ appVersion: 2026.1.0-rc0
 
 dependencies:
   - name: node-feature-discovery
-    version: "0.17.2"
+    version: "0.18.3"
     condition: node-feature-discovery.enabled
     repository: https://kubernetes-sigs.github.io/node-feature-discovery/charts
