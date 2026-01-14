@@ -6,7 +6,7 @@ rules:
   - apiGroups:
       - furiosa.ai
     resources:
-      - nodeconfigs
+      - furiosaclusterconfigs
     verbs:
       - create
       - delete
@@ -18,13 +18,13 @@ rules:
   - apiGroups:
       - furiosa.ai
     resources:
-      - nodeconfigs/finalizers
+      - furiosaclusterconfigs/finalizers
     verbs:
       - update
   - apiGroups:
       - furiosa.ai
     resources:
-      - nodeconfigs/status
+      - furiosaclusterconfigs/status
     verbs:
       - get
       - patch
