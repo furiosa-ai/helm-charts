@@ -1,0 +1,8 @@
+{{- if .Values.multinode }}
+⚠️  WARNING: multinode=true enables LeaderWorkerSet (LWS), which is designed for
+   coordinating pods across multiple nodes. However, Furiosa-LLM does not currently
+   support KV cache transfer or PD disaggregation, making multi-node coordination
+   ineffective.
+
+   Consider setting multinode=false for more efficient LLM serving.
+{{- end }}
