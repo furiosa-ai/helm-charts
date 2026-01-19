@@ -24,7 +24,7 @@ resources: {}
 #   memory: 128Mi
 
 node-feature-discovery:
-  enabled: false
+  enabled: true
   # add toleration as needed
   # worker:
   #   tolerations:
