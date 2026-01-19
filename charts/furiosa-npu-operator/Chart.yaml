@@ -1,7 +1,8 @@
 apiVersion: v2
-name: furiosa-feature-discovery
-description: A Helm chart for furiosa-feature-discovery
+name: furiosa-npu-operator
+description: A Helm chart for `furiosa-npu-operator`
 type: application
+
 version: 2026.1.0-rc0
 appVersion: 2026.1.0-rc0
 
