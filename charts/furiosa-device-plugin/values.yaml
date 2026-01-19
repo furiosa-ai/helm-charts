@@ -21,6 +21,12 @@ daemonSet:
                 operator: In
                 values:
                   - "true"
+              - key: furiosa.ai/npu.count
+                operator: Exists
+              - key: furiosa.ai/npu.count
+                operator: NotIn
+                values:
+                  - "0"
 
   resources: {}
   # limits:
