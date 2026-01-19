@@ -63,26 +63,6 @@ accelerator:
 # @schema
 # additionalProperties: true
 # @schema
-# -- Requester configuration part of the dual-pod solution for FMA
-requester:
-  enable: false
-  image: "ghcr.io/llm-d-incubation/llm-d-fast-model-actuation-requester:latest"
-  adminPort: 8081
-  port:
-    probes: 8080
-    spi: 8081
-  readinessProbe:
-    initialDelaySeconds: 2
-    periodSeconds: 5
-  resources:
-    limits:
-      gpus: 1
-      cpus: 1
-      memory: 250Mi
-
-# @schema
-# additionalProperties: true
-# @schema
 dra:
   enabled: false # true: use this block instead of the `accelerator`
   type: furiosa # which claimTemplates entry to use
