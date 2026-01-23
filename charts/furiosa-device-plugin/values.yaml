@@ -1,5 +1,5 @@
 image:
-  repository: asia-northeast3-docker.pkg.dev/next-gen-infra/furiosa-ai/furiosa-device-plugin
+  repository: docker.io/furiosaai/furiosa-device-plugin
   pullPolicy: IfNotPresent
   tag: ""  # If empty, AppVersion will be used as a tag.
 
