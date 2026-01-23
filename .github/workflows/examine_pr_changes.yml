@@ -17,7 +17,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: setup helm env
-        uses: helm/chart-testing-action@v2.6.0
+        uses: helm/chart-testing-action@v2.8.0
       - name: Add dependency chart repos
         run: |
           helm repo add nfd https://kubernetes-sigs.github.io/node-feature-discovery/charts
@@ -30,18 +30,30 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        k8s-version: ['v1.24.15', 'v1.25.11', 'v1.26.6', 'v1.27.3', 'v1.28.0', 'v1.29.8', 'v1.30.4', 'v1.31.0']
+        k8s-version:
+          - v1.24.17
+          - v1.25.16
+          - v1.26.15
+          - v1.27.16
+          - v1.28.15
+          - v1.29.14
+          - v1.30.13
+          - v1.31.14
+          - v1.32.11
+          - v1.33.7
+          - v1.34.3
+          - v1.35.0
     steps:
       - name: checkout
         uses: actions/checkout@v4
       - name: create kind cluster
-        uses: helm/kind-action@v1.8.0
+        uses: helm/kind-action@v1.13.0
         with:
           cluster_name: helm-charts-test-${{ matrix.k8s-version }}
           config: .github/workflows/kind_config/kind_${{ matrix.k8s-version }}.yaml
           kubectl_version: ${{ matrix.k8s-version }}
       - name: setup helm env
-        uses: helm/chart-testing-action@v2.6.0
+        uses: helm/chart-testing-action@v2.8.0
       - name: Add dependency chart repos
         run: |
           helm repo add nfd https://kubernetes-sigs.github.io/node-feature-discovery/charts
