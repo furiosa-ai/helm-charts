@@ -491,7 +491,6 @@ context is a dict with helm root context plus:
 command: ["furiosa-llm", "serve"]
 args:
 {{- (include "llm-d-modelservice.argsByProtocol" .) }}
-  - --enable-metrics
   - --port
   - {{ (include "llm-d-modelservice.furiosaLLMPort" .) | quote }}
   {{- $tensorParallelism := int (include "llm-d-modelservice.tensorParallelism" .parallelism) -}}
