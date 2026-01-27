@@ -2,8 +2,8 @@ apiVersion: v2
 name: llm-d-modelservice
 description: A Helm chart for ModelService in llm-d
 type: application
-version: "v0.3.16-furiosa"
-appVersion: "v0.3.0"
+version: 2026.1.0
+appVersion: 2026.1.0
 
 dependencies:
   - name: common
