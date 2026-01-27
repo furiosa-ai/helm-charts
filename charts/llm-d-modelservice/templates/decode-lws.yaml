@@ -1,4 +1,7 @@
 {{- if and .Values.decode.create .Values.multinode }}
+{{- fail "LeaderWorkerSet based deployment is not supported. Please set multinode=false" }}
+{{- end }}
+{{- if and .Values.decode.create .Values.multinode }}
 apiVersion: leaderworkerset.x-k8s.io/v1
 kind: LeaderWorkerSet
 metadata:
