@@ -61,6 +61,7 @@ In addition to deploying the GAIE chart, an `HTTPRoute` is typically required to
 >    Setting this value to `true` deploys decode pods using LeaderWorkerSet, which is designed for scenarios where multiple pods work cooperatively.
 >    However, Furiosa-LLM processes cannot cooperatively perform LLM inference like [vLLM](https://docs.vllm.ai/en/latest/serving/data_parallel_deployment/#internal-load-balancing).
 >    Furthermore, when deploying with LeaderWorkerSets containing more than one worker, only the leader pod's metrics are exposed to the GAIE, preventing proper load balancing across all workers.
+>    Therefore, setting this value to `true` will cause an error during the deployment of the Helm chart.
 
 Below are the values you can set.
 | Key                                    | Description                                                                                                       | Type            | Default                                     |
