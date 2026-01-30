@@ -1,0 +1,11 @@
+{{- if .Values.dra.enabled -}}
+apiVersion: resource.k8s.io/v1
+kind: ResourceClaimTemplate
+metadata:
+  name: {{ .Values.dra.type }}-resource-claim-template
+  namespace: {{ .Release.Namespace }}
+spec:
+  spec:
+    devices:
+      {{- (include "llm-d-modelservice.draResourceClaimDeviceClaim" (dict "Values" .Values)) | nindent 6 }}
+{{- end}}
