@@ -64,8 +64,8 @@ accelerator:
 # additionalProperties: true
 # @schema
 dra:
-  enabled: false # true: use this block instead of the `accelerator`
-  type: furiosa # which claimTemplates entry to use
+  enabled: false  # true: use this block instead of the `accelerator`
+  type: furiosa  # which claimTemplates entry to use
   claimTemplates:
     - name: furiosa
       class: npu.furiosa.ai
