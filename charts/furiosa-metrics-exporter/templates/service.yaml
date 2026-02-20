@@ -1,16 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "furiosa-metrics-exporter.name" . }}
-  namespace: {{ .Values.namespace | default "kube-system" }}
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
   {{- if .Values.service.enableScrapAnnotations }}
   annotations:
     prometheus.io/scrape: "true"
     prometheus.io/port: "{{ .Values.service.port }}"
   {{- end }}
-  labels:
-    app.kubernetes.io/name: {{ include "furiosa-metrics-exporter.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -19,5 +16,5 @@ spec:
       targetPort: {{ .Values.service.targetPort }}
       protocol: TCP
   selector:
-    app.kubernetes.io/name: {{ include "furiosa-metrics-exporter.name" . }}
+    app.kubernetes.io/name: furiosa-metrics-exporter
     app.kubernetes.io/instance: {{ .Release.Name }}

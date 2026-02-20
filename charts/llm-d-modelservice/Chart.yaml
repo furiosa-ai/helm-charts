@@ -1,0 +1,13 @@
+apiVersion: v2
+name: llm-d-modelservice
+description: A Helm chart for ModelService in llm-d
+type: application
+version: 2026.1.0
+appVersion: 2026.1.0
+
+dependencies:
+  - name: common
+    repository: https://charts.bitnami.com/bitnami
+    tags:
+      - bitnami-common
+    version: "2.27.0"

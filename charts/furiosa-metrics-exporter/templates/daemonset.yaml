@@ -1,27 +1,26 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: {{ include "furiosa-metrics-exporter.name" . }}
-  namespace: {{ .Values.namespace | default "kube-system" }}
-  labels:
-    {{- include "furiosa-metrics-exporter.labels" . | nindent 4 }}
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "furiosa-metrics-exporter.name" . }}
+      app.kubernetes.io/name: furiosa-metrics-exporter
       app.kubernetes.io/instance: {{ .Release.Name }}
   updateStrategy:
-    {{- toYaml .Values.daemonSet.updateStrategy | nindent 4 }}
+    {{ toYaml .Values.daemonSet.updateStrategy | nindent 4 }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ include "furiosa-metrics-exporter.name" . }}
+        app.kubernetes.io/name: furiosa-metrics-exporter
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
       priorityClassName:  {{ .Values.daemonSet.priorityClassName | default "system-node-critical" }}
       containers:
-        - name: {{ include "furiosa-metrics-exporter.name" . }}
-          image: {{ .Values.daemonSet.image.repository | default "docker.io/furiosaai/furiosa-metrics-exporter" }}:{{ .Values.daemonSet.image.tag | default "latest" }}
+        - name: furiosa-metrics-exporter
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - ./main
           args:
@@ -40,14 +39,10 @@ spec:
               value: "{{ .Values.config.collectInterval }}"
             - name: KUBE_RESOURCES_LABEL
               value: "{{ .Values.config.kubeResourcesLabel }}"
-          imagePullPolicy: {{ .Values.daemonSet.image.pullPolicy | default "IfNotPresent" }}
+          {{- with .Values.daemonSet.resources }}
           resources:
-            requests:
-              cpu: {{ .Values.daemonSet.resources.cpu | default "1000m" }}
-              memory: {{ .Values.daemonSet.resources.memory | default "128Mi" }}
-            limits:
-              cpu: {{ .Values.daemonSet.resources.cpu | default "1000m" }}
-              memory: {{ .Values.daemonSet.resources.memory | default "128Mi" }}
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -62,11 +57,11 @@ spec:
               mountPath: /var/lib/kubelet/pod-resources/
       {{- with .Values.daemonSet.affinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
+        {{ toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.daemonSet.imagePullSecrets }}
+      {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
+        {{ toYaml . | nindent 8 }}
       {{- end }}
       volumes:
         - name: dev-fs
@@ -80,5 +75,5 @@ spec:
             path: /var/lib/kubelet/pod-resources/
       {{- with .Values.daemonSet.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
+        {{ toYaml . | nindent 8 }}
       {{- end }}
