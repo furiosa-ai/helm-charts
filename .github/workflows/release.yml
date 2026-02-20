@@ -4,8 +4,9 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'charts/**'
+      - solve-chart-release-failure-for-2026.1.0-cn-235
+    # paths:
+    #   - 'charts/**'
 
 jobs:
   release:
@@ -26,6 +27,7 @@ jobs:
         run: |
           helm repo add nfd https://kubernetes-sigs.github.io/node-feature-discovery/charts
           helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo update
 
       - name: Configure Git
         run: |
