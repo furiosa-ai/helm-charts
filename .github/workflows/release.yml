@@ -25,6 +25,8 @@ jobs:
       - name: Add dependency chart repos
         run: |
           helm repo add nfd https://kubernetes-sigs.github.io/node-feature-discovery/charts
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo update
 
       - name: Configure Git
         run: |

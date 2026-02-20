@@ -1,13 +1,13 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ include "furiosa-dra-driver.fullname" . }}-role-binding
-  namespace: {{ .Values.namespace | default "kube-system" }}
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
 subjects:
   - kind: ServiceAccount
-    name: {{ include "furiosa-dra-driver.serviceAccountName" . }}
-    namespace: {{ .Values.namespace | default "kube-system" }}
+    name: {{ .Release.Name }}
+    namespace: {{ .Release.Namespace }}
 roleRef:
   kind: Role
-  name: {{ include "furiosa-dra-driver.fullname" . }}-role
+  name: {{ .Release.Name }}
   apiGroup: rbac.authorization.k8s.io
