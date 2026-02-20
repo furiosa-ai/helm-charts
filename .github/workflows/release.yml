@@ -4,9 +4,8 @@ on:
   push:
     branches:
       - main
-      - solve-chart-release-failure-for-2026.1.0-cn-235
-    # paths:
-    #   - 'charts/**'
+    paths:
+      - 'charts/**'
 
 jobs:
   release:
