@@ -1,26 +1,54 @@
 name: Release Charts
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'charts/**'
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to (re-)package, e.g., 2026.2.0"
+        required: true
+        type: string
+
+concurrency:
+  group: release-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
 
 jobs:
   release:
+    runs-on: ubuntu-latest
     permissions:
       contents: write
-    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'release' &&
+       github.event.release.draft == false &&
+       github.event.release.prerelease == false &&
+       ! contains(github.event.release.tag_name, '-'))
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Resolve target tag
+        id: tag
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          DISPATCH_TAG: ${{ inputs.tag }}
+        run: |
+          TAG="${RELEASE_TAG:-$DISPATCH_TAG}"
+          if [[ ! "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Tag '$TAG' is not calver <YYYY>.<minor>.<patch>"
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout source at tag
+        uses: actions/checkout@v6
         with:
+          ref: ${{ steps.tag.outputs.tag }}
           fetch-depth: 0
-      - name: Helm tool installer
-        uses: Azure/setup-helm@v4.2.0
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
         with:
-          version: v3.13.3
+          version: v4.1.4
 
       - name: Add dependency chart repos
         run: |
@@ -28,12 +56,52 @@ jobs:
           helm repo add bitnami https://charts.bitnami.com/bitnami
           helm repo update
 
-      - name: Configure Git
-        run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.6.0
+      - name: Select charts matching tag
         env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          mkdir -p .cr-release-packages
+          MATCHES=()
+          for f in charts/*/Chart.yaml; do
+            v=$(yq '.version' "$f")
+            if [[ "$v" == "$TAG" ]]; then
+              MATCHES+=("$(dirname "$f")")
+            fi
+          done
+          if [[ ${#MATCHES[@]} -eq 0 ]]; then
+            echo "::error::No charts have version=$TAG"
+            exit 1
+          fi
+          printf '%s\n' "${MATCHES[@]}" > matched-charts.txt
+          cat matched-charts.txt
+
+      - name: Package matched charts
+        run: |
+          while read -r dir; do
+            helm dependency update "$dir"
+            helm package "$dir" -d .cr-release-packages
+          done < matched-charts.txt
+
+      - name: Upload .tgz files to umbrella release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          gh release upload "$TAG" .cr-release-packages/*.tgz --clobber
+
+      - name: Update gh-pages index.yaml
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          git fetch origin gh-pages
+          git worktree add ../gh-pages origin/gh-pages
+          helm repo index .cr-release-packages \
+            --merge ../gh-pages/index.yaml \
+            --url "https://github.com/${{ github.repository }}/releases/download/$TAG"
+          mv .cr-release-packages/index.yaml ../gh-pages/index.yaml
+          cd ../gh-pages
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.yaml
+          git commit -m "Publish charts for $TAG"
+          git push origin HEAD:gh-pages

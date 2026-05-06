@@ -12,6 +12,15 @@ helm repo add furiosa https://furiosa-ai.github.io/helm-charts
 ```
 You can then run `helm search repo furiosa` to see the charts.
 
+### Releasing
+
+1. Open a PR bumping the relevant `Chart.yaml` `version` (and `appVersion`) fields. Get it reviewed and merged into `main`.
+2. On the merged commit, create a GitHub Release: tag = the calver (e.g., `2026.2.0`), target = `main`, "Set as the latest release", **not** prerelease, **not** draft. Release notes are free-form.
+3. The `Release Charts` workflow runs automatically and packages every chart whose `Chart.yaml: version` matches the release tag, attaches the `.tgz` files to the Release as assets, and updates `gh-pages/index.yaml`.
+4. If the workflow fails, re-trigger it via Actions → `Release Charts` → "Run workflow" → enter `tag: 2026.2.0`.
+
+For a single-chart hotfix, bump only that chart and use that chart's new version as the release tag (e.g., `2026.2.1`).
+
 ## Known Issues
 
 ### furiosa-feature-discovery
