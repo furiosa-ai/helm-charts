@@ -1,14 +1,17 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ include "furiosa-npu-operator.fullname" . }}-metrics
   namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "furiosa-npu-operator.labels" . | nindent 4 }}
+    control-plane: controller-manager
 spec:
   type: {{ .Values.service.type }}
   ports:
-    - port: {{ .Values.service.port }}
+    - name: https
+      port: {{ .Values.service.port }}
       protocol: TCP
       targetPort: {{ .Values.operator.metricsPort }}
   selector:
-    app.kubernetes.io/name: furiosa-npu-operator
-    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- include "furiosa-npu-operator.selectorLabels" . | nindent 4 }}

@@ -1,8 +1,81 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ include "furiosa-npu-operator.fullname" . }}
+  labels:
+    {{- include "furiosa-npu-operator.labels" . | nindent 4 }}
 rules:
+  # Manager ClusterRole (config/rbac/role.yaml)
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - pods
+      - serviceaccounts
+      - services
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - list
+      - patch
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - pods/eviction
+    verbs:
+      - create
+  - apiGroups:
+      - apps
+    resources:
+      - controllerrevisions
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - daemonsets
+      - deployments
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
   - apiGroups:
       - furiosa.ai
     resources:
@@ -32,54 +105,44 @@ rules:
   - apiGroups:
       - rbac.authorization.k8s.io
     resources:
-      - clusterroles
       - clusterrolebindings
+      - clusterroles
+      - rolebindings
+      - roles
     verbs:
+      - create
+      - delete
       - get
       - list
-      - watch
-      - create
-      - update
       - patch
-      - delete
+      - update
+      - watch
   - apiGroups:
       - resource.k8s.io
     resources:
       - deviceclasses
-      - resourceclaims
       - resourceslices
     verbs:
+      - create
+      - delete
       - get
       - list
-      - watch
-      - create
-      - update
       - patch
-      - delete
+      - update
+      - watch
+  - apiGroups:
+      - resource.k8s.io
+    resources:
+      - resourceclaims
+    verbs:
+      - get
   - apiGroups:
       - resource.k8s.io
     resources:
       - resourceclaims/status
     verbs:
       - update
-      - patch
-  - apiGroups:
-      - ""
-    resources:
-      - nodes
-    verbs:
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - events
-    verbs:
-      - create
-      - patch
+  # Metrics auth (config/rbac/metrics_auth_role.yaml)
   - apiGroups:
       - authentication.k8s.io
     resources:
