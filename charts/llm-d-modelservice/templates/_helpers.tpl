@@ -58,47 +58,31 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- $name -}}
 {{- end }}
 
-{{/* Create common shared by prefill and decode deployment/LWS */}}
+{{/* Create common shared by prefill and decode deployments */}}
 {{- define "llm-d-modelservice.pdlabels" -}}
 {{ .Values.modelArtifacts.labels | toYaml }}
 {{- end }}
 
-{{/* Create labels for the prefill deployment/LWS */}}
+{{/* Create labels for the prefill deployment */}}
 {{- define "llm-d-modelservice.prefilllabels" -}}
 {{ include "llm-d-modelservice.pdlabels" . }}
 llm-d.ai/role: prefill
 {{- end }}
 
-{{/* Create labels for the decode deployment/LWS */}}
+{{/* Create labels for the decode deployment */}}
 {{- define "llm-d-modelservice.decodelabels" -}}
 {{ include "llm-d-modelservice.pdlabels" . }}
 llm-d.ai/role: decode
 {{- end }}
 
-{{/* Create node affinity from acceleratorTypes in Values */}}
-{{- define "llm-d-modelservice.acceleratorTypes" -}}
-{{- if .labelKey }}
-affinity:
-  nodeAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      nodeSelectorTerms:
-        - matchExpressions:
-          - key: {{ .labelKey }}
-            operator: In
-            {{- with .labelValues }}
-            values:
-            {{- toYaml . | nindent 14 }}
-            {{- end }}
-{{- end }}
-{{- end }}
 {{/* Create the init container for the routing proxy/sidecar for decode pods */}}
 {{- define "llm-d-modelservice.routingProxy" -}}
 {{- if or (not (hasKey .proxy "enabled")) (ne .proxy.enabled false) -}}
 - name: routing-proxy
   args:
     - --port={{ default 8000 .servicePort }}
-    - --vllm-port={{ default 8200 .proxy.targetPort }}
-    - --connector={{ .proxy.connector | default "nixlv2" }}
+    - --model-server-port={{ default 8200 .proxy.targetPort }}
+    - --kv-connector={{ .proxy.connector | default "nixlv2" }}
     {{- if hasKey .proxy "zapDevel" }}
     - --zap-devel={{ .proxy.zapDevel }}
     {{- end }}
@@ -125,9 +109,26 @@ affinity:
     {{- end }}
   image: {{ required "routing.proxy.image must be specified" .proxy.image }}
   imagePullPolicy: {{ default "Always" .proxy.imagePullPolicy }}
+{{- if and .Values.tracing .Values.tracing.enabled }}
+  env:
+    - name: OTEL_SERVICE_NAME
+      value: {{ .Values.tracing.serviceNames.routingProxy | quote }}
+    - name: OTEL_EXPORTER_OTLP_ENDPOINT
+      value: {{ .Values.tracing.otlpEndpoint | quote }}
+    - name: OTEL_TRACES_EXPORTER
+      value: "otlp"
+    - name: OTEL_TRACES_SAMPLER
+      value: {{ .Values.tracing.sampling.sampler | quote }}
+    - name: OTEL_TRACES_SAMPLER_ARG
+      value: {{ .Values.tracing.sampling.samplerArg | quote }}
+{{- end }}
   ports:
     - containerPort: {{ default 8000 .servicePort }}
+  {{- if .proxy.resources }}
+  resources: {{- toYaml .proxy.resources | nindent 4 }}
+  {{- else }}
   resources: {}
+  {{- end }}
   restartPolicy: Always
   securityContext:
     allowPrivilegeEscalation: false
@@ -137,127 +138,135 @@ affinity:
 
 {{/* Desired tensor parallelism --
 - if tensor set, return it
-- else return 4
+- else return the Furiosa-LLM default of 8
 */}}
 {{- define "llm-d-modelservice.tensorParallelism" -}}
-{{- if and . .tensor -}}
+{{- if and . (hasKey . "tensor") -}}
+{{- if lt (int .tensor) 1 -}}
+{{- fail "parallelism.tensor must be greater than zero" -}}
+{{- end -}}
 {{ .tensor }}
 {{- else -}}
-4
+8
 {{- end -}}
 {{- end }}
 
-{{/*
-Desired pipeline parallelism --
-- if pipeline set, return it
-- else return 1
-*/}}
-{{- define "llm-d-modelservice.pipelineParallelism" -}}
-{{- if and . .pipeline -}}
-{{ .pipeline }}
-{{- else -}}
-1
-{{- end -}}
-{{- end }}
-
-{{/*
-Desired data parallelism --
-- if data set, return it
-- else return 1
-*/}}
+{{/* Desired per-pod data parallelism; an omitted value defaults to 1. */}}
 {{- define "llm-d-modelservice.dataParallelism" -}}
-{{- if and . .data -}}
+{{- if and . (hasKey . "data") -}}
+{{- if lt (int .data) 1 -}}
+{{- fail "parallelism.data must be greater than zero" -}}
+{{- end -}}
 {{ .data }}
 {{- else -}}
 1
 {{- end -}}
 {{- end }}
 
-{{/*
-Desired number of workers --
-- if workers set, return it
-- else return 1
-*/}}
-{{- define "llm-d-modelservice.numWorkers" -}}
-{{- if and . .workers -}}
-{{ .workers }}
+{{/* Desired pipeline parallelism */}}
+{{- define "llm-d-modelservice.pipelineParallelism" -}}
+{{- if and . (hasKey . "pipeline") -}}
+{{- if lt (int .pipeline) 1 -}}
+{{- fail "parallelism.pipeline must be greater than zero" -}}
+{{- end -}}
+{{ .pipeline }}
 {{- else -}}
 1
 {{- end -}}
 {{- end }}
 
-{{/*
-Required number of RNGD per pod -- ceil(dp * pp * tp / 8)
-*/}}
-{{- define "llm-d-modelservice.numRngdPerWorker" -}}
-{{- $dp := int (include "llm-d-modelservice.dataParallelism" .) -}}
-{{- $pp := int (include "llm-d-modelservice.pipelineParallelism" .) -}}
-{{- $tp := int (include "llm-d-modelservice.tensorParallelism" .) -}}
-{{- $product := mul $dp $pp $tp -}}
-{{- div (add $product 7) 8 -}}
+{{/* Required number of Furiosa RNGDs per pod -- ceil(dp * pp * tp / 8). */}}
+{{- define "llm-d-modelservice.furiosaRngdCountPerPod" -}}
+{{- $data := int (include "llm-d-modelservice.dataParallelism" .) -}}
+{{- $pipeline := int (include "llm-d-modelservice.pipelineParallelism" .) -}}
+{{- $tensor := int (include "llm-d-modelservice.tensorParallelism" .) -}}
+{{- div (add (mul $data $pipeline $tensor) 7) 8 -}}
 {{- end }}
 
 {{/*
-Port on which vllm container should listen.
+Port on which the inference engine container should listen.
 Context is helm root context plus key "role" ("decode" or "prefill")
 */}}
-{{- define "llm-d-modelservice.furiosaLLMPort" -}}
+{{- define "llm-d-modelservice.modelServerPort" -}}
 {{- if or (eq .role "prefill") (eq .Values.routing.proxy.enabled false) }}
-{{- .Values.routing.servicePort }}
+{{- default 8000 .Values.routing.servicePort }}
 {{- else }}
 {{- .Values.routing.proxy.targetPort }}
 {{- end }}
 {{- end }}
 
-{{/* Get accelerator resource name based on type */}}
+{{/* Get the Furiosa device-plugin resource name. */}}
 {{- define "llm-d-modelservice.acceleratorResource" -}}
-{{- $acceleratorType := .Values.accelerator.type | default "furiosa" -}}
-{{- if and .container .container.image (contains "llm-d-inference-sim" .container.image) -}}
-{{/* No resource name for llm-d-inference-sim */}}
-{{- else if eq $acceleratorType "cpu" -}}
-{{/* No resource name for CPU */}}
-{{- else if hasKey .Values.accelerator.resources $acceleratorType -}}
-{{- index .Values.accelerator.resources $acceleratorType -}}
+{{- if and .Values.accelerator.resources (hasKey .Values.accelerator.resources "furiosa") -}}
+{{- index .Values.accelerator.resources "furiosa" -}}
 {{- else -}}
 furiosa.ai/rngd
-{{- end -}}
+{{- end }}
 {{- end }}
 
-{{/* Get accelerator environment variables based on type */}}
-{{- define "llm-d-modelservice.acceleratorEnv" -}}
-{{- $acceleratorType := .Values.accelerator.type | default "furiosa" -}}
-{{- if and (ne $acceleratorType "cpu") (hasKey .Values.accelerator.env $acceleratorType) -}}
-{{- $envVars := index .Values.accelerator.env $acceleratorType -}}
-{{- range $envVars }}
-- name: {{ .name }}
-  value: {{ .value | quote }}
-{{- end -}}
-{{- end -}}
+{{/* Check for accelerator resource mismatch and return warning message if any */}}
+{{- define "llm-d-modelservice.acceleratorWarning" -}}
+{{- $numAccelerators := int (include "llm-d-modelservice.furiosaRngdCountPerPod" .parallelism) -}}
+{{- $acceleratorResource := include "llm-d-modelservice.acceleratorResource" . -}}
+{{- if and (ge $numAccelerators 1) (ne $acceleratorResource "") }}
+{{- if and .resources .resources.limits (hasKey .resources.limits $acceleratorResource) }}
+{{- $userValue := int (index .resources.limits $acceleratorResource) }}
+{{- if ne $userValue $numAccelerators }}
+{{- printf "Accelerator mismatch: %s is set to %d but parallelism calculates %d. Using %d." $acceleratorResource $userValue $numAccelerators $userValue }}
+{{- end }}
+{{- end }}
+{{- end }}
 {{- end }}
 
 {{/* P/D deployment container resources */}}
 {{- define "llm-d-modelservice.resources" -}}
-{{- $numRngds := int (include "llm-d-modelservice.numRngdPerWorker" .parallelism) -}}
-{{- $acceleratorResource := include "llm-d-modelservice.acceleratorResource" . -}}
 {{- $limits := dict }}
 {{- if and .resources .resources.limits }}
-{{- $limits = deepCopy .resources.limits }}
-{{- end }}
-{{- if and (ge (int $numRngds) 1) (ne $acceleratorResource "") }}
-{{- $limits = mergeOverwrite $limits (dict $acceleratorResource (toString $numRngds)) }}
+  {{- $limits = deepCopy .resources.limits }}
 {{- end }}
 {{- $requests := dict }}
 {{- if and .resources .resources.requests }}
-{{- $requests = deepCopy .resources.requests }}
+  {{- $requests = deepCopy .resources.requests }}
 {{- end }}
-{{- if and (ge (int $numRngds) 1) (ne $acceleratorResource "") }}
-{{- $requests = mergeOverwrite $requests (dict $acceleratorResource (toString $numRngds)) }}
-{{- end }}
+{{- $draEnabled := eq (include "llm-d-modelservice.draEnabled" .) "true" -}}
 resources:
+{{- if $draEnabled -}}
+  {{- /* DRA mode: pass through user-defined limits/requests as-is, add claims */}}
+  {{- /* Users should not include accelerator resources in limits when DRA is enabled */}}
   limits:
     {{- toYaml $limits | nindent 4 }}
   requests:
     {{- toYaml $requests | nindent 4 }}
+{{- else -}}
+  {{- /* Device-plugin mode: default to the calculated per-pod RNGD count. */}}
+  {{- $numAccelerators := int (include "llm-d-modelservice.furiosaRngdCountPerPod" .parallelism) -}}
+  {{- $acceleratorResource := include "llm-d-modelservice.acceleratorResource" . -}}
+  {{- if and (ge (int $numAccelerators) 1) (ne $acceleratorResource "") }}
+    {{- /* Respect the user's explicit Furiosa device-plugin limit. */}}
+    {{- if not (hasKey $limits $acceleratorResource) }}
+      {{- $limits = mergeOverwrite $limits (dict $acceleratorResource (toString $numAccelerators)) }}
+    {{- end }}
+  {{- end }}
+  {{- if and (ge (int $numAccelerators) 1) (ne $acceleratorResource "") }}
+    {{- /* Respect the user's explicit Furiosa device-plugin request. */}}
+    {{- if not (hasKey $requests $acceleratorResource) }}
+      {{- $requests = mergeOverwrite $requests (dict $acceleratorResource (toString $numAccelerators)) }}
+    {{- end }}
+  {{- end }}
+  limits:
+    {{- toYaml $limits | nindent 4 }}
+  requests:
+    {{- toYaml $requests | nindent 4 }}
+{{- end -}}
+{{- $claimList := include "llm-d-modelservice.resourceClaimsBase" . | fromYamlArray -}}
+{{- if $claimList }}
+  claims:
+  {{- $containerClaims := list -}}
+  {{- range $claimList -}}
+    {{- $containerClaims = append $containerClaims (dict "name" .name) -}}
+  {{- end }}
+    {{- toYaml $containerClaims | nindent 4 }}
+{{- end }}
 {{- end }}
 
 {{/* prefill name */}}
@@ -298,7 +307,7 @@ Context is .Values.modelArtifacts
 - name: model-storage
   persistentVolumeClaim:
     claimName: {{ $claim }}
-    readOnly: true
+    readOnly: {{ .readOnly }}
 {{- else if eq $protocol "oci" }}
 - name: model-storage
   image:
@@ -323,18 +332,19 @@ volumeMounts:
 {{- if .container.mountModelVolume }}
   - name: model-storage
     mountPath: {{ .Values.modelArtifacts.mountPath }}
-{{- /* enforce readOnly volumeMounts for OCI and PVCs */}}
+{{- /* OCI always readOnly; PVC variants use modelArtifacts.readOnly */}}
 {{- $parsedArtifacts := regexSplit "://" .Values.modelArtifacts.uri -1 -}}
 {{- $protocol := first $parsedArtifacts -}}
-{{- $path := last $parsedArtifacts -}}
-{{- if or (eq $protocol "oci") (eq $protocol "pvc") }}
+{{- if eq $protocol "oci" }}
     readOnly: true
+{{- else if hasPrefix "pvc" $protocol }}
+    readOnly: {{ .Values.modelArtifacts.readOnly }}
 {{- end -}}
 {{- end }}
 {{- end }}
 
 {{/*
-Pod elements of deployment/lws spec template
+Pod elements of Deployment spec template
 context is a pdSpec
 */}}
 {{- define "llm-d-modelservice.modelPod" -}}
@@ -350,15 +360,15 @@ context is a pdSpec
   {{- if or .pdSpec.schedulerName .Values.schedulerName }}
   schedulerName: {{ .pdSpec.schedulerName | default .Values.schedulerName }}
   {{- end }}
+  {{- if and .pdSpec.priorityClassName (ne (.pdSpec.priorityClassName | lower) "none") }}
+  priorityClassName: {{ .pdSpec.priorityClassName }}
+  {{- end }}
   {{- /* DEPRECATED; use extraConfig.securityContext instead */ -}}
   {{- with .pdSpec.podSecurityContext }}
   securityContext:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   serviceAccountName: {{ include "llm-d-modelservice.pdServiceAccountName" . }}
-  {{- with .pdSpec.acceleratorTypes }}
-  {{- include "llm-d-modelservice.acceleratorTypes" . | nindent 2 }}
-  {{- end -}}
   {{- /* define volume for the pd pod. Create a volume depending on the model artifact uri type */}}
   volumes:
   {{- if or .pdSpec.volumes }}
@@ -374,13 +384,12 @@ context is a pdSpec
   {{- if $hasModelVolume }}
   {{ include "llm-d-modelservice.mountModelVolumeVolumes" .Values.modelArtifacts | nindent 4}}
   {{- end -}}
-  {{- if .Values.dra.enabled -}}
-    {{- (include "llm-d-modelservice.draResourceClaims" (dict "Values" .Values)) | nindent 2 }}
-  {{- end -}}
+  {{- /* Add resourceClaims for DRA (new and old API) */}}
+  {{- include "llm-d-modelservice.podResourceClaims" . | nindent 2 }}
 {{- end }}
 
 {{/*
-Container elements of deployment/lws spec template
+Container elements of Deployment spec template
 context is a dict with helm root context plus:
    key - "container"; value - container spec
    key - "role"; value - either "decode" or "prefill"
@@ -411,9 +420,8 @@ context is a dict with helm root context plus:
   {{- (include "llm-d-modelservice.parallelismEnv" .) | nindent 2 }}
   {{- /* insert envs based on what modelArtifact prefix */}}
   {{- (include "llm-d-modelservice.hfEnv" .) | nindent 2 }}
-  {{- /* Add accelerator-specific environment variables */}}
-  {{- $acceleratorEnv := include "llm-d-modelservice.acceleratorEnv" . }}
-  {{- if $acceleratorEnv }}{{ $acceleratorEnv | nindent 2 }}{{- end }}
+  {{- /* Add tracing environment variables */}}
+  {{- (include "llm-d-modelservice.tracingEnv" .) | nindent 2 }}
   {{- with .container.ports }}
   ports:
     {{- include "common.tplvalues.render" ( dict "value" . "context" $ ) | nindent 2 }}
@@ -433,11 +441,7 @@ context is a dict with helm root context plus:
   startupProbe:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- if .Values.dra.enabled }}
-  {{- (include "llm-d-modelservice.draResources" (dict "resources" .container.resources "parallelism" .parallelism "container" .container "Values" .Values)) | nindent 2 }}
-  {{- else }}
-  {{- (include "llm-d-modelservice.resources" (dict "resources" .container.resources "parallelism" .parallelism "container" .container "Values" .Values)) | nindent 2 }}
-  {{- end }}
+  {{- (include "llm-d-modelservice.resources" (dict "resources" .container.resources "parallelism" .parallelism "container" .container "Values" .Values "role" .role "pdSpec" .pdSpec)) | nindent 2 }}
   {{- include "llm-d-modelservice.mountModelVolumeVolumeMounts" (dict "container" .container "Values" .Values) | nindent 2 }}
   {{- /* DEPRECATED; use extraConfig.workingDir instead */ -}}
   {{- with .container.workingDir }}
@@ -470,7 +474,7 @@ context is a dict with helm root context plus:
   {{- if .modelArg }}
   - --model
   {{- end }}
-  - {{ .Values.modelArtifacts.mountPath }}/{{ $path }}
+  - {{ trimSuffix "/" .Values.modelArtifacts.mountPath }}/{{ $path }}
 {{- else if eq $protocol "pvc+hf" }}
 {{- $claimpath := regexSplit "/" $other -1 -}}
 {{- $length := len $claimpath }}
@@ -487,27 +491,20 @@ context is a dict with helm root context plus:
 {{- end }} {{- /* define "llm-d-modelservice.argsByProtocol" */}}
 
 {{- define "llm-d-modelservice.furiosaLLMServeModelCommand" -}}
-{{- /* override command and set model and --port arguments */}}
+{{- $tensorParallelism := int (include "llm-d-modelservice.tensorParallelism" .parallelism) -}}
+{{- $dataParallelism := int (include "llm-d-modelservice.dataParallelism" .parallelism) -}}
+{{- $pipelineParallelism := int (include "llm-d-modelservice.pipelineParallelism" .parallelism) -}}
 command: ["furiosa-llm", "serve"]
 args:
 {{- (include "llm-d-modelservice.argsByProtocol" .) }}
   - --port
-  - {{ (include "llm-d-modelservice.furiosaLLMPort" .) | quote }}
-  {{- $tensorParallelism := int (include "llm-d-modelservice.tensorParallelism" .parallelism) -}}
-  {{- if gt (int $tensorParallelism) 1 }}
+  - {{ (include "llm-d-modelservice.modelServerPort" .) | quote }}
   - --tensor-parallel-size
   - {{ $tensorParallelism | quote }}
-  {{- end }}
-  {{- $dataParallelism := int (include "llm-d-modelservice.dataParallelism" .parallelism) -}}
-  {{- if gt (int $dataParallelism) 1 }}
   - --data-parallel-size
   - {{ $dataParallelism | quote }}
-  {{- end }}
-  {{- $pipelineParallelism := int (include "llm-d-modelservice.pipelineParallelism" .parallelism) -}}
-  {{- if gt (int $pipelineParallelism) 1 }}
   - --pipeline-parallel-size
   - {{ $pipelineParallelism | quote }}
-  {{- end }}
 {{- with .container.args }}
   {{ toYaml . | nindent 2 }}
 {{- end }}
@@ -530,7 +527,7 @@ args:
 {{- end }} {{- /* define "llm-d-modelservice.modelCommandCustom" */}}
 
 {{/*
-Container elements of deployment/lws spec template
+Container elements of Deployment spec template
 context is a dict with helm root context plus:
    key - "container"; value - container spec
    key - "role"; value - either "decode" or "prefill"
@@ -543,7 +540,7 @@ context is a dict with helm root context plus:
 {{- else if eq $modelCommand "custom" }}
 {{- include "llm-d-modelservice.customModelCommand" . }}
 {{- else }}
-{{- fail ".container.modelCommand is not as expected. Valid values are `furiosaLLMServe`, and `custom`." }}
+{{- fail ".container.modelCommand is not as expected. Valid values are `furiosaLLMServe` and `custom`." }}
 {{- end }}
 {{- end }} {{- /* define "llm-d-modelservice.command" */}}
 
@@ -567,7 +564,7 @@ context is a dict with helm root context plus:
 {{- $hfhubcache := join "/" $middle }}
 {{- if .container.mountModelVolume }}
 - name: HF_HUB_CACHE
-  value: /model-cache/{{ $hfhubcache }}
+  value: {{ trimSuffix "/" .Values.modelArtifacts.mountPath }}/{{ $hfhubcache }}
 {{- end }}
 {{- end }}
 {{- end }}
@@ -588,3 +585,30 @@ context is a dict with helm root context plus:
 - name: PP_SIZE
   value: {{ include "llm-d-modelservice.pipelineParallelism" .parallelism | quote }}
 {{- end }} {{- /* define "llm-d-modelservice.parallelismEnv" */}}
+
+{{/*
+Standard OpenTelemetry environment variables for Furiosa-LLM containers.
+This is manifest-level configuration only; OTLP export depends on runtime/SDK support.
+Requires: .Values.tracing, .role ("decode" or "prefill")
+Returns: YAML list of environment variables if tracing is enabled, empty otherwise
+*/}}
+{{- define "llm-d-modelservice.tracingEnv" -}}
+{{- if and .Values.tracing .Values.tracing.enabled }}
+{{- $serviceName := "" }}
+{{- if eq .role "decode" }}
+  {{- $serviceName = .Values.tracing.serviceNames.furiosaLLMDecode }}
+{{- else if eq .role "prefill" }}
+  {{- $serviceName = .Values.tracing.serviceNames.furiosaLLMPrefill }}
+{{- end }}
+- name: OTEL_SERVICE_NAME
+  value: {{ $serviceName | quote }}
+- name: OTEL_EXPORTER_OTLP_ENDPOINT
+  value: {{ .Values.tracing.otlpEndpoint | quote }}
+- name: OTEL_TRACES_EXPORTER
+  value: "otlp"
+- name: OTEL_TRACES_SAMPLER
+  value: {{ .Values.tracing.sampling.sampler | quote }}
+- name: OTEL_TRACES_SAMPLER_ARG
+  value: {{ .Values.tracing.sampling.samplerArg | quote }}
+{{- end }}
+{{- end }} {{- /* define "llm-d-modelservice.tracingEnv" */}}

@@ -1,0 +1,30 @@
+{{- if .Values.prefill.create }}
+{{- fail "Furiosa-LLM P/D disaggregation is not supported by this chart; set prefill.create=false." }}
+{{- end }}
+{{- if .Values.routing.proxy.enabled }}
+{{- fail "The llm-d P/D routing proxy is not compatible with Furiosa-LLM; set routing.proxy.enabled=false." }}
+{{- end }}
+{{- if hasKey .Values "multinode" }}
+{{- fail "multinode has been removed; this Furiosa-only chart supports Deployment-only topology." }}
+{{- end }}
+{{- if hasKey .Values.decode.parallelism "workers" }}
+{{- fail "decode.parallelism.workers has been removed; this Furiosa-only chart supports Deployment-only topology." }}
+{{- end }}
+{{- if hasKey .Values.prefill.parallelism "workers" }}
+{{- fail "prefill.parallelism.workers has been removed; this Furiosa-only chart supports Deployment-only topology." }}
+{{- end }}
+{{- if hasKey .Values.decode.parallelism "dataLocal" }}
+{{- fail "decode.parallelism.dataLocal has been removed; use decode.parallelism.data." }}
+{{- end }}
+{{- if hasKey .Values.prefill.parallelism "dataLocal" }}
+{{- fail "prefill.parallelism.dataLocal has been removed; use prefill.parallelism.data." }}
+{{- end }}
+{{- if and (hasKey .Values.accelerator "type") (ne .Values.accelerator.type "furiosa") }}
+{{- fail "accelerator.type must be furiosa; this is a Furiosa-only chart." }}
+{{- end }}
+{{- if and .Values.decode.accelerator (hasKey .Values.decode.accelerator "type") (ne .Values.decode.accelerator.type "furiosa") }}
+{{- fail "decode.accelerator.type must be furiosa; this is a Furiosa-only chart." }}
+{{- end }}
+{{- if and .Values.prefill.accelerator (hasKey .Values.prefill.accelerator "type") (ne .Values.prefill.accelerator.type "furiosa") }}
+{{- fail "prefill.accelerator.type must be furiosa; this is a Furiosa-only chart." }}
+{{- end }}

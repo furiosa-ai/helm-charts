@@ -19,7 +19,6 @@ spec:
     matchLabels:
       {{- include "llm-d-modelservice.prefilllabels" . | nindent 6 }}
   podMetricsEndpoints:
-  # For prefill, this is port 8000. Must use port name.
   - port: {{ .Values.prefill.monitoring.podmonitor.portName | default "metrics" | quote }}
     path: {{ .Values.prefill.monitoring.podmonitor.path | default "/metrics" }}
     interval: {{ .Values.prefill.monitoring.podmonitor.interval | default "30s" }}

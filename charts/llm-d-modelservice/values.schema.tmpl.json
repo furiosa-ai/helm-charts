@@ -1,24 +1,59 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "additionalProperties": false,
+  "additionalProperties": true,
   "properties": {
     "accelerator": {
       "additionalProperties": false,
       "description": " Supported type: furiosa",
       "properties": {
-        "env": {
-          "additionalProperties": true,
-          "description": " additionalProperties: true @schema Environment variables specific to accelerator types",
+        "dra": {
+          "default": false,
+          "description": " type: boolean @schema Enable Dynamic Resource Allocation (DRA) for accelerators When true, uses resourceClaimTemplates instead of device plugin resources",
+          "title": "dra",
+          "type": "boolean"
+        },
+        "resourceClaimTemplates": {
+          "additionalProperties": false,
+          "description": "ResourceClaimTemplate configuration for DRA (used when dra: true)",
+          "properties": {
+            "furiosa": {
+              "additionalProperties": false,
+              "description": " properties:   name:     type: string     default: furiosa-claim-template   class:     type: string     default: npu.furiosa.ai   match:     type: string     default: exactly   selectors:     type: array   count:     type: integer     minimum: 1 @schema",
+              "properties": {
+                "class": {
+                  "default": "npu.furiosa.ai",
+                  "type": "string"
+                },
+                "count": {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "match": {
+                  "default": "exactly",
+                  "type": "string"
+                },
+                "name": {
+                  "default": "furiosa-claim-template",
+                  "type": "string"
+                },
+                "selectors": {
+                  "type": "array"
+                }
+              },
+              "required": [],
+              "title": "furiosa"
+            }
+          },
           "required": [],
-          "title": "env"
+          "title": "resourceClaimTemplates",
+          "type": "object"
         },
         "resources": {
           "additionalProperties": false,
-          "description": "Resource names for different accelerator types",
+          "description": "Resource name used when dra: false",
           "properties": {
             "furiosa": {
               "default": "furiosa.ai/rngd",
-              "required": [],
               "title": "furiosa",
               "type": "string"
             }
@@ -29,10 +64,12 @@
         },
         "type": {
           "default": "furiosa",
-          "description": "Type of accelerator to use",
+          "description": " @schema enum: [furiosa] @schema",
+          "enum": [
+            "furiosa"
+          ],
           "required": [],
-          "title": "type",
-          "type": "string"
+          "title": "type"
         }
       },
       "required": [],
@@ -53,7 +90,6 @@
           "properties": {
             "enabled": {
               "default": false,
-              "required": [],
               "title": "enabled",
               "type": "boolean"
             }
@@ -63,19 +99,26 @@
           "type": "object"
         },
         "containers": {
-          "description": " type: array items:   type: object   additionalProperties: true @schema",
+          "description": " type: array items:   type: object   additionalProperties: true   properties:     modelCommand:       type: string       enum: [furiosaLLMServe, custom] @schema",
           "items": {
             "additionalProperties": true,
+            "properties": {
+              "modelCommand": {
+                "enum": [
+                  "furiosaLLMServe",
+                  "custom"
+                ],
+                "type": "string"
+              }
+            },
             "required": [],
             "type": "object"
           },
-          "required": [],
           "title": "containers",
           "type": "array"
         },
         "create": {
           "default": true,
-          "required": [],
           "title": "create",
           "type": "boolean"
         },
@@ -85,13 +128,12 @@
             "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master/_definitions.json#/definitions/io.k8s.api.core.v1.Container",
             "required": []
           },
-          "required": [],
           "title": "initContainers",
           "type": "array"
         },
         "monitoring": {
           "additionalProperties": true,
-          "description": "Only an option for LWS (multinode) subGroupExclusiveToplogy: true @schema additionalProperties: true @schema Monitoring configuration for decode pods",
+          "description": "Not set by default (defaults to 30 seconds if not specified). terminationGracePeriodSeconds: 60 @schema additionalProperties: true @schema Monitoring configuration for decode pods",
           "properties": {
             "podmonitor": {
               "additionalProperties": false,
@@ -160,48 +202,57 @@
         },
         "nodeSelector": {
           "additionalProperties": true,
-          "description": " additionalProperties: true @schema",
+          "description": "maxUnavailable: 1 strategy: {} @schema additionalProperties: true @schema",
           "required": [],
           "title": "nodeSelector"
         },
         "parallelism": {
           "additionalProperties": false,
-          "description": "VLLM parallelism configuration",
+          "description": "Set to \"none\" or leave empty to not set a priority class priorityClassName: high-priority Inference engine parallelism configuration",
           "properties": {
             "data": {
               "default": 1,
-              "required": [],
               "title": "data",
               "type": "integer"
             },
             "pipeline": {
               "default": 1,
-              "required": [],
               "title": "pipeline",
               "type": "integer"
             },
             "tensor": {
-              "default": 4,
-              "required": [],
+              "default": 8,
               "title": "tensor",
-              "type": "integer"
-            },
-            "workers": {
-              "default": 1,
-              "required": [],
-              "title": "workers",
               "type": "integer"
             }
           },
           "required": [],
-          "title": "parallelism",
-          "type": "object"
+          "title": "parallelism"
         },
         "replicas": {
           "default": 1,
-          "required": [],
           "title": "replicas",
           "type": "integer"
+        },
+        "resourceClaims": {
+          "description": "   # Optional: Override global accelerator configuration for decode pods   # When not specified, falls back to global accelerator settings    # Override accelerator type for decode pods   # Supported: furiosa   type: furiosa    # Override DRA (Dynamic Resource Allocation) mode for decode pods   # When not specified, falls back to accelerator.dra   dra: false @schema type: array items:   type: object   required: [name, resourceClaimTemplateName]   properties:     name:       type: string     resourceClaimTemplateName:       type: string @schema Additional resource claims for non-accelerator resources (e.g., IMEX channels) These will be merged with accelerator claims when accelerator.dra is enabled",
+          "items": {
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "resourceClaimTemplateName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "resourceClaimTemplateName"
+            ],
+            "type": "object"
+          },
+          "title": "resourceClaims",
+          "type": "array"
         },
         "volumes": {
           "description": " type: array items:   type: object   additionalProperties: true @schema",
@@ -210,82 +261,12 @@
             "required": [],
             "type": "object"
           },
-          "required": [],
           "title": "volumes",
           "type": "array"
         }
       },
       "required": [],
       "title": "decode"
-    },
-    "dra": {
-      "additionalProperties": true,
-      "description": " additionalProperties: true @schema",
-      "properties": {
-        "claimTemplates": {
-          "items": {
-            "anyOf": [
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "class": {
-                    "default": "npu.furiosa.ai",
-                    "required": [],
-                    "title": "class",
-                    "type": "string"
-                  },
-                  "count": {
-                    "default": 1,
-                    "required": [],
-                    "title": "count",
-                    "type": "integer"
-                  },
-                  "match": {
-                    "default": "exactly",
-                    "required": [],
-                    "title": "match",
-                    "type": "string"
-                  },
-                  "name": {
-                    "default": "furiosa",
-                    "required": [],
-                    "title": "name",
-                    "type": "string"
-                  },
-                  "selectors": {
-                    "items": {
-                      "required": []
-                    },
-                    "required": [],
-                    "title": "selectors",
-                    "type": "array"
-                  }
-                },
-                "required": [],
-                "type": "object"
-              }
-            ],
-            "required": []
-          },
-          "required": [],
-          "title": "claimTemplates",
-          "type": "array"
-        },
-        "enabled": {
-          "default": false,
-          "required": [],
-          "title": "enabled",
-          "type": "boolean"
-        },
-        "type": {
-          "default": "furiosa",
-          "required": [],
-          "title": "type",
-          "type": "string"
-        }
-      },
-      "required": [],
-      "title": "dra"
     },
     "enabled": {
       "default": "true",
@@ -316,39 +297,30 @@
     },
     "modelArtifacts": {
       "additionalProperties": false,
-      "description": "Name of the scheduler to use for scheduling model pods schedulerName: default-scheduler",
       "properties": {
         "authSecretName": {
           "default": "",
           "description": "name of secret containing credentials for accessing the model (e.g., HF_TOKEN)",
-          "required": [],
           "title": "authSecretName",
           "type": "string"
         },
         "labels": {
-          "additionalProperties": false,
-          "description": " These should match the labels of any associated InferencePool In addition, the label llm-d.ai/role will be added with the value 'prefill' or 'decode' depending on the role of the pod.",
+          "additionalProperties": true,
+          "description": " These should match the labels of any associated InferencePool In addition, the label llm-d.ai/role will be added with the value 'prefill' or 'decode' depending on the role of the pod. @schema type: object additionalProperties: true @schema",
           "properties": {
-            "llm-d.ai/inferenceServing": {
+            "llm-d.ai/inference-serving": {
               "default": "true",
-              "required": [],
-              "title": "llm-d.ai/inferenceServing",
-              "type": "string"
-            },
-            "llm-d.ai/model": {
-              "default": "random_model",
-              "required": [],
-              "title": "llm-d.ai/model",
+              "title": "llm-d.ai/inference-serving",
               "type": "string"
             }
           },
           "required": [],
-          "title": "labels"
+          "title": "labels",
+          "type": "object"
         },
         "mountPath": {
           "default": "/model-cache",
           "description": "location where model volume will be mounted (used when mountModelVolume: true)",
-          "required": [],
           "title": "mountPath",
           "type": "string"
         },
@@ -358,10 +330,15 @@
           "required": [],
           "title": "name"
         },
+        "readOnly": {
+          "default": true,
+          "description": " type: boolean @schema Whether PVC-backed model mounts (pvc:// and pvc+hf://) should be read-only. Set to false for pvc+hf:// when Hugging Face cache writes are needed; other URI schemes ignore this setting.",
+          "title": "readOnly",
+          "type": "boolean"
+        },
         "size": {
           "default": "5Mi",
           "description": "size of volume to create to hold the model",
-          "required": [],
           "title": "size",
           "type": "string"
         },
@@ -373,48 +350,18 @@
         }
       },
       "required": [],
-      "title": "modelArtifacts"
-    },
-    "multinode": {
-      "default": false,
-      "description": "When true, a LeaderWorkerSet is used instead of a Deployment",
-      "required": [],
-      "title": "multinode",
-      "type": "boolean"
+      "title": "modelArtifacts",
+      "type": "object"
     },
     "prefill": {
       "additionalProperties": true,
-      "description": " additionalProperties: true @schema Prefill pod configuation NOTE: PD disaggregation is not currently supported",
+      "description": " additionalProperties: true @schema Prefill pod configuation",
       "properties": {
-        "acceleratorTypes": {
-          "additionalProperties": false,
-          "description": "Only an option for LWS (multinode) subGroupExclusiveToplogy: true XPU-specific node affinity",
-          "properties": {
-            "labelKey": {
-              "default": "",
-              "required": [],
-              "title": "labelKey",
-              "type": "string"
-            },
-            "labelValues": {
-              "description": " items:   type: string @schema",
-              "items": {
-                "required": [],
-                "type": "string"
-              },
-              "required": [],
-              "title": "labelValues"
-            }
-          },
-          "required": [],
-          "title": "acceleratorTypes"
-        },
         "autoscaling": {
           "additionalProperties": false,
           "properties": {
             "enabled": {
               "default": false,
-              "required": [],
               "title": "enabled",
               "type": "boolean"
             }
@@ -424,21 +371,28 @@
           "type": "object"
         },
         "containers": {
-          "description": " type: array items:   type: object   additionalProperties: true @schema",
+          "description": " type: array items:   type: object   additionalProperties: true   properties:     modelCommand:       type: string       enum: [furiosaLLMServe, custom] @schema",
           "items": {
             "additionalProperties": true,
+            "properties": {
+              "modelCommand": {
+                "enum": [
+                  "furiosaLLMServe",
+                  "custom"
+                ],
+                "type": "string"
+              }
+            },
             "required": [],
             "type": "object"
           },
-          "required": [],
           "title": "containers",
           "type": "array"
         },
         "create": {
-          "default": "false",
-          "description": "Set to true to create prefill pods (not supported)",
-          "required": [],
-          "title": "create"
+          "default": false,
+          "title": "create",
+          "type": "boolean"
         },
         "initContainers": {
           "description": " type: array items:   $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master/_definitions.json#/definitions/io.k8s.api.core.v1.Container @schema Additional init containers to run before the main containers",
@@ -446,13 +400,12 @@
             "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master/_definitions.json#/definitions/io.k8s.api.core.v1.Container",
             "required": []
           },
-          "required": [],
           "title": "initContainers",
           "type": "array"
         },
         "monitoring": {
           "additionalProperties": true,
-          "description": " additionalProperties: true @schema Monitoring configuration for prefill pods",
+          "description": "Not set by default (defaults to 30 seconds if not specified). terminationGracePeriodSeconds: 60 @schema additionalProperties: true @schema Monitoring configuration for prefill pods",
           "properties": {
             "podmonitor": {
               "additionalProperties": false,
@@ -521,42 +474,57 @@
         },
         "nodeSelector": {
           "additionalProperties": true,
-          "description": " additionalProperties: true @schema",
+          "description": "maxUnavailable: 1 strategy: {} @schema additionalProperties: true @schema",
           "required": [],
           "title": "nodeSelector"
         },
         "parallelism": {
           "additionalProperties": false,
-          "description": "VLLM parallelism configuration",
+          "description": "Set to \"none\" or leave empty to not set a priority class priorityClassName: high-priority Inference engine parallelism configuration",
           "properties": {
             "data": {
               "default": 1,
-              "required": [],
               "title": "data",
               "type": "integer"
             },
             "pipeline": {
               "default": 1,
-              "required": [],
               "title": "pipeline",
               "type": "integer"
             },
             "tensor": {
-              "default": 4,
-              "required": [],
+              "default": 8,
               "title": "tensor",
               "type": "integer"
             }
           },
           "required": [],
-          "title": "parallelism",
-          "type": "object"
+          "title": "parallelism"
         },
         "replicas": {
           "default": 0,
-          "required": [],
           "title": "replicas",
           "type": "integer"
+        },
+        "resourceClaims": {
+          "description": "   # Optional: Override global accelerator configuration for prefill pods   # When not specified, falls back to global accelerator settings    # Override accelerator type for prefill pods   # Supported: furiosa   type: furiosa    # Override DRA (Dynamic Resource Allocation) mode for prefill pods   # When not specified, falls back to accelerator.dra   dra: false @schema type: array items:   type: object   required: [name, resourceClaimTemplateName]   properties:     name:       type: string     resourceClaimTemplateName:       type: string @schema Additional resource claims for non-accelerator resources (e.g., IMEX channels) These will be merged with accelerator claims when accelerator.dra is enabled",
+          "items": {
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "resourceClaimTemplateName": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "resourceClaimTemplateName"
+            ],
+            "type": "object"
+          },
+          "title": "resourceClaims",
+          "type": "array"
         },
         "volumes": {
           "description": " type: array items:   type: object   additionalProperties: true @schema",
@@ -565,7 +533,6 @@
             "required": [],
             "type": "object"
           },
-          "required": [],
           "title": "volumes",
           "type": "array"
         }
@@ -579,44 +546,45 @@
       "properties": {
         "proxy": {
           "additionalProperties": true,
-          "description": " additionalProperties: true @schema Configuration of VLLM routing sidecar cf. https://github.com/llm-d/llm-d-routing-sidecar/",
+          "description": " additionalProperties: true @schema Configuration of the dormant routing sidecar cf. https://github.com/llm-d/llm-d-router-disagg-sidecar/",
           "properties": {
             "connector": {
               "default": "nixlv2",
               "description": "Specify a conenctor. For example, `nixl`, `nixlv2`",
-              "required": [],
               "title": "connector",
               "type": "string"
             },
             "enabled": {
-              "default": true,
-              "required": [],
+              "default": false,
               "title": "enabled",
               "type": "boolean"
             },
             "image": {
-              "default": "ghcr.io/llm-d/llm-d-routing-sidecar:v0.4.0-rc.1",
-              "required": [],
+              "default": "ghcr.io/llm-d/llm-d-router-disagg-sidecar:latest",
               "title": "image",
               "type": "string"
             },
             "imagePullPolicy": {
               "default": "Always",
-              "required": [],
               "title": "imagePullPolicy",
               "type": "string"
+            },
+            "resources": {
+              "additionalProperties": true,
+              "description": "Resource requests and limits for the routing proxy sidecar container. When not set, no resource constraints are applied (resources: {}). @schema type: object additionalProperties: true @schema",
+              "required": [],
+              "title": "resources",
+              "type": "object"
             },
             "secure": {
               "default": false,
               "description": "Boolean: adds the `--secure-proxy` flag to the routingSidecar with your chosen value.  Arg is ommitted by default for compatability with legacy sidecar images.",
-              "required": [],
               "title": "secure",
               "type": "boolean"
             },
             "targetPort": {
               "default": 8200,
-              "description": "target port on which VLLM should listen",
-              "required": [],
+              "description": "target port on which the inference engine should listen",
               "title": "targetPort",
               "type": "integer"
             },
@@ -646,7 +614,7 @@
         },
         "servicePort": {
           "default": "8000",
-          "description": " modelName: random/modelId port the inference engine (vLLM) listens when a sidecar (proxy) is used it will listen on this port and forward to VLLM on proxy.targetPort",
+          "description": " modelName: random/modelId port the inference engine listens on when a sidecar (proxy) is used it listens on this port and forwards to the engine on proxy.targetPort",
           "required": [],
           "title": "servicePort"
         }
@@ -659,6 +627,72 @@
       "description": "Override to default pod serviceAccountName",
       "required": [],
       "title": "serviceAccountOverride"
+    },
+    "tracing": {
+      "additionalProperties": false,
+      "description": "Name of the scheduler to use for scheduling model pods schedulerName: default-scheduler OpenTelemetry distributed tracing environment configuration When enabled, this chart injects standard OTEL_* variables for Furiosa-LLM and the dormant routing proxy. Export remains SDK/runtime-dependent: current Furiosa-LLM does not initialize a standard OTLP exporter or prove that it consumes these values.",
+      "properties": {
+        "enabled": {
+          "default": "false",
+          "description": "Enable distributed tracing",
+          "required": [],
+          "title": "enabled"
+        },
+        "otlpEndpoint": {
+          "default": "http://otel-collector:4317",
+          "description": "OTLP endpoint made available to a tracing-capable SDK/runtime",
+          "required": [],
+          "title": "otlpEndpoint"
+        },
+        "sampling": {
+          "additionalProperties": false,
+          "description": "Trace sampling configuration",
+          "properties": {
+            "sampler": {
+              "default": "parentbased_traceidratio",
+              "description": "OpenTelemetry sampler type (e.g., \"parentbased_traceidratio\", \"always_on\", \"always_off\")",
+              "required": [],
+              "title": "sampler"
+            },
+            "samplerArg": {
+              "default": "1.0",
+              "description": "Sampling ratio (0.0 to 1.0). Use 1.0 for 100% sampling (demo/debug), 0.1 for 10% (production)",
+              "required": [],
+              "title": "samplerArg"
+            }
+          },
+          "required": [],
+          "title": "sampling"
+        },
+        "serviceNames": {
+          "additionalProperties": false,
+          "description": "Service name overrides for different components",
+          "properties": {
+            "furiosaLLMDecode": {
+              "default": "furiosa-llm-decode",
+              "description": "Service name for Furiosa-LLM decode instances",
+              "required": [],
+              "title": "furiosaLLMDecode"
+            },
+            "furiosaLLMPrefill": {
+              "default": "furiosa-llm-prefill",
+              "description": "Service name for dormant Furiosa-LLM prefill instances",
+              "required": [],
+              "title": "furiosaLLMPrefill"
+            },
+            "routingProxy": {
+              "default": "routing-proxy",
+              "description": "Service name for the dormant routing proxy sidecar",
+              "required": [],
+              "title": "routingProxy"
+            }
+          },
+          "required": [],
+          "title": "serviceNames"
+        }
+      },
+      "required": [],
+      "title": "tracing"
     }
   },
   "required": [],

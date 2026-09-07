@@ -1,6 +1,8 @@
+# @schema.root
+# additionalProperties: true
+# @schema.root
 # yaml-language-server: $schema=values.schema.json
 # This values.yaml file is a default values file. It can be overridden using another.
-
 # @schema
 # additionalProperties: true
 # @schema
@@ -16,8 +18,35 @@ fullnameOverride: ""
 # -- Override to default pod serviceAccountName
 serviceAccountOverride: ""
 
+# @schema
+# type: string
+# @schema
 # schedulerName -- Name of the scheduler to use for scheduling model pods
 # schedulerName: default-scheduler
+
+# OpenTelemetry distributed tracing environment configuration
+# When enabled, this chart injects standard OTEL_* variables for Furiosa-LLM and the
+# dormant routing proxy. Export remains SDK/runtime-dependent: current Furiosa-LLM
+# does not initialize a standard OTLP exporter or prove that it consumes these values.
+tracing:
+  # -- Enable distributed tracing
+  enabled: false
+  # -- OTLP endpoint made available to a tracing-capable SDK/runtime
+  otlpEndpoint: "http://otel-collector:4317"
+  # -- Trace sampling configuration
+  sampling:
+    # -- OpenTelemetry sampler type (e.g., "parentbased_traceidratio", "always_on", "always_off")
+    sampler: "parentbased_traceidratio"
+    # -- Sampling ratio (0.0 to 1.0). Use 1.0 for 100% sampling (demo/debug), 0.1 for 10% (production)
+    samplerArg: "1.0"
+  # -- Service name overrides for different components
+  serviceNames:
+    # -- Service name for Furiosa-LLM decode instances
+    furiosaLLMDecode: "furiosa-llm-decode"
+    # -- Service name for dormant Furiosa-LLM prefill instances
+    furiosaLLMPrefill: "furiosa-llm-prefill"
+    # -- Service name for the dormant routing proxy sidecar
+    routingProxy: "routing-proxy"
 
 modelArtifacts:
   # name is the value of the model parameter in OpenAI requests
@@ -27,9 +56,12 @@ modelArtifacts:
   # These should match the labels of any associated InferencePool
   # In addition, the label llm-d.ai/role will be added with the value 'prefill'
   # or 'decode' depending on the role of the pod.
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
   labels:
-    llm-d.ai/inferenceServing: "true"
-    llm-d.ai/model: random_model
+    llm-d.ai/inference-serving: "true"
 
   # model URI. One of:
   #   hf://model/name - model as defined on Hugging Face
@@ -42,35 +74,53 @@ modelArtifacts:
   authSecretName: ""
   # location where model volume will be mounted (used when mountModelVolume: true)
   mountPath: /model-cache
-
-# When true, a LeaderWorkerSet is used instead of a Deployment
-multinode: false
+  # @schema
+  # type: boolean
+  # @schema
+  # Whether PVC-backed model mounts (pvc:// and pvc+hf://) should be read-only.
+  # Set to false for pvc+hf:// when Hugging Face cache writes are needed; other URI schemes ignore this setting.
+  readOnly: true
 
 # Global accelerator configuration
 # Supported type: furiosa
 accelerator:
   # Type of accelerator to use
+  # @schema
+  # enum: [furiosa]
+  # @schema
   type: furiosa
-  # Resource names for different accelerator types
+  # @schema
+  # type: boolean
+  # @schema
+  # Enable Dynamic Resource Allocation (DRA) for accelerators
+  # When true, uses resourceClaimTemplates instead of device plugin resources
+  dra: false
+  # Resource name used when dra: false
   resources:
     furiosa: "furiosa.ai/rngd"
-  # @schema
-  # additionalProperties: true
-  # @schema
-  # Environment variables specific to accelerator types
-  env: {}
-
-# @schema
-# additionalProperties: true
-# @schema
-dra:
-  enabled: false  # true: use this block instead of the `accelerator`
-  type: furiosa  # which claimTemplates entry to use
-  claimTemplates:
-    - name: furiosa
+  # ResourceClaimTemplate configuration for DRA (used when dra: true)
+  resourceClaimTemplates:
+    # @schema
+    # properties:
+    #   name:
+    #     type: string
+    #     default: furiosa-claim-template
+    #   class:
+    #     type: string
+    #     default: npu.furiosa.ai
+    #   match:
+    #     type: string
+    #     default: exactly
+    #   selectors:
+    #     type: array
+    #   count:
+    #     type: integer
+    #     minimum: 1
+    # @schema
+    furiosa:
+      name: furiosa-claim-template
       class: npu.furiosa.ai
       match: "exactly"
-      count: 1
       selectors: []
 
 # Describe routing requirements. In addition to service level routing (OpenAI model name, service port)
@@ -78,20 +128,20 @@ dra:
 routing:
   # Deprecated
   # modelName: random/modelId
-  # port the inference engine (vLLM) listens
-  # when a sidecar (proxy) is used it will listen on this port and forward to VLLM on proxy.targetPort
+  # port the inference engine listens on
+  # when a sidecar (proxy) is used it listens on this port and forwards to the engine on proxy.targetPort
   servicePort: 8000
 
   # @schema
   # additionalProperties: true
   # @schema
-  # Configuration of VLLM routing sidecar
-  # cf. https://github.com/llm-d/llm-d-routing-sidecar/
+  # Configuration of the dormant routing sidecar
+  # cf. https://github.com/llm-d/llm-d-router-disagg-sidecar/
   proxy:
-    enabled: true
-    image: ghcr.io/llm-d/llm-d-routing-sidecar:v0.4.0-rc.1
+    enabled: false
+    image: ghcr.io/llm-d/llm-d-router-disagg-sidecar:latest
     imagePullPolicy: Always
-    # target port on which VLLM should listen
+    # target port on which the inference engine should listen
     targetPort: 8200
     # Specify a conenctor. For example, `nixl`, `nixlv2`
     connector: nixlv2
@@ -141,6 +191,14 @@ routing:
     # @schema
     # zapTimeEncoding: epoch
 
+    # -- Resource requests and limits for the routing proxy sidecar container.
+    # When not set, no resource constraints are applied (resources: {}).
+    # @schema
+    # type: object
+    # additionalProperties: true
+    # @schema
+    resources: {}
+
 # @schema
 # additionalProperties: true
 # @schema
@@ -151,25 +209,83 @@ decode:
     enabled: false
 
   replicas: 1
+
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  # -- Deployment strategy configuration for decode pods.
+  # -- Defaults to Kubernetes default if not specified.
+  # -- Example:
+  # --   strategy:
+  # --     type: RollingUpdate
+  # --     rollingUpdate:
+  # --       maxSurge: 0
+  # --       maxUnavailable: 1
+  # strategy: {}
+
   # @schema
   # additionalProperties: true
   # @schema
   nodeSelector: {}
+  # @schema
+  # type: string
+  # @schema
   # schedulerName -- Name of the scheduler to use for scheduling decode pods (overrides global schedulerName)
   # schedulerName: decode-scheduler
 
-  # VLLM parallelism configuration
+  # @schema
+  # type: string
+  # @schema
+  # priorityClassName -- Kubernetes PriorityClass name for decode pods
+  # -- Set to "none" or leave empty to not set a priority class
+  # priorityClassName: high-priority
+
+  # Inference engine parallelism configuration
   parallelism:
-    tensor: 4
+    tensor: 8
     data: 1
     pipeline: 1
-    workers: 1
+
+  # accelerator:
+  #   # Optional: Override global accelerator configuration for decode pods
+  #   # When not specified, falls back to global accelerator settings
+  #
+  #   # Override accelerator type for decode pods
+  #   # Supported: furiosa
+  #   type: furiosa
+  #
+  #   # Override DRA (Dynamic Resource Allocation) mode for decode pods
+  #   # When not specified, falls back to accelerator.dra
+  #   dra: false
+
+  # @schema
+  # type: array
+  # items:
+  #   type: object
+  #   required: [name, resourceClaimTemplateName]
+  #   properties:
+  #     name:
+  #       type: string
+  #     resourceClaimTemplateName:
+  #       type: string
+  # @schema
+  # Additional resource claims for non-accelerator resources (e.g., IMEX channels)
+  # These will be merged with accelerator claims when accelerator.dra is enabled
+  resourceClaims: []
+  # Example:
+  # - name: llm-d-imex-channel-0
+  #   resourceClaimTemplateName: llm-d-imex-channel-0
 
   # @schema
   # type: array
   # items:
   #   type: object
   #   additionalProperties: true
+  #   properties:
+  #     modelCommand:
+  #       type: string
+  #       enum: [furiosaLLMServe, custom]
   # @schema
   containers:
     - name: "furiosa-llm"
@@ -197,7 +313,7 @@ decode:
       #   $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master/_definitions.json#/definitions/io.k8s.api.core.v1.ContainerPort
       # @schema
       ports: []
-      #   - containerPort: 8200  # matches routing.proxy.targetPort, set for metrics scraping with  monitoring.podmonitor.enabled true
+      #   - containerPort: 8000  # matches routing.servicePort, set for metrics scraping with monitoring.podmonitor.enabled true
       #     name: metrics
       #     protocol: TCP
       # @schema
@@ -212,10 +328,6 @@ decode:
         # additionalProperties: true
         # @schema
         requests: {}
-        # @schema
-        # additionalProperties: true
-        # @schema
-        claims: {}
       # when set, a volumeMount (and volume) is created for model storage
       mountModelVolume: true
       # @schema
@@ -246,16 +358,6 @@ decode:
   # These will be added alongside the routing proxy init container (if enabled)
   initContainers: []
 
-  # hostIPC -- Boolean: Use the host's ipc namespace.
-  # -- Not set by default.
-  # -- Only an option for LWS (multinode) See: https://github.com/kubernetes-sigs/lws/blob/main/config/crd/bases/leaderworkerset.x-k8s.io_leaderworkersets.yaml#L12196.
-  # hostIPC: false
-
-  # hostPID -- Boolean: Use the host's pid namespace.
-  # -- Not set by default.
-  # -- Only an option for LWS (multinode) See: https://github.com/kubernetes-sigs/lws/blob/main/config/crd/bases/leaderworkerset.x-k8s.io_leaderworkersets.yaml#L12207.
-  # hostPID: false
-
   # enableServiceLinks -- Boolean: Indicates whether information about services should be injected into pod's environment variables.
   # -- Not set by default (defaults to true if not specified).
   # enableServiceLinks: false
@@ -263,17 +365,6 @@ decode:
   # terminationGracePeriodSeconds -- Duration in seconds the pod needs to terminate gracefully.
   # -- Not set by default (defaults to 30 seconds if not specified).
   # terminationGracePeriodSeconds: 60
-
-  # subGroupPolicy -- object: SubGroupPolicy describes the policy that will be applied when creating subgroups in each replica.
-  # -- Not set by default
-  # -- Only an option for LWS (multinode) See: https://github.com/kubernetes-sigs/lws/blob/main/config/crd/bases/leaderworkerset.x-k8s.io_leaderworkersets.yaml#L8207
-  # subGroupPolicy:
-  #   subGroupSize: 8
-
-  # subGroupExclusiveToplogy -- Boolean: Should the `subgroup-exclusive-topology` annotation be added to the LWS
-  # -- Not set by default
-  # -- Only an option for LWS (multinode)
-  # subGroupExclusiveToplogy: true
 
   # @schema
   # additionalProperties: true
@@ -313,36 +404,96 @@ decode:
 # additionalProperties: true
 # @schema
 # Prefill pod configuation
-# NOTE: PD disaggregation is not currently supported
 prefill:
-  # -- Set to true to create prefill pods (not supported)
   create: false
   autoscaling:
     enabled: false
 
   replicas: 0
+
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  # -- Deployment strategy configuration for prefill pods.
+  # -- Defaults to Kubernetes default if not specified.
+  # -- Example:
+  # --   strategy:
+  # --     type: RollingUpdate
+  # --     rollingUpdate:
+  # --       maxSurge: 0
+  # --       maxUnavailable: 1
+  # strategy: {}
+
   # @schema
   # additionalProperties: true
   # @schema
   nodeSelector: {}
+  # @schema
+  # type: string
+  # @schema
   # schedulerName -- Name of the scheduler to use for scheduling prefill pods (overrides global schedulerName)
   # schedulerName: prefill-scheduler
 
-  # VLLM parallelism configuration
+  # @schema
+  # type: string
+  # @schema
+  # priorityClassName -- Kubernetes PriorityClass name for prefill pods
+  # -- Set to "none" or leave empty to not set a priority class
+  # priorityClassName: high-priority
+
+  # Inference engine parallelism configuration
   parallelism:
-    tensor: 4
+    tensor: 8
     data: 1
     pipeline: 1
+
+  # accelerator:
+  #   # Optional: Override global accelerator configuration for prefill pods
+  #   # When not specified, falls back to global accelerator settings
+  #
+  #   # Override accelerator type for prefill pods
+  #   # Supported: furiosa
+  #   type: furiosa
+  #
+  #   # Override DRA (Dynamic Resource Allocation) mode for prefill pods
+  #   # When not specified, falls back to accelerator.dra
+  #   dra: false
+
+  # @schema
+  # type: array
+  # items:
+  #   type: object
+  #   required: [name, resourceClaimTemplateName]
+  #   properties:
+  #     name:
+  #       type: string
+  #     resourceClaimTemplateName:
+  #       type: string
+  # @schema
+  # Additional resource claims for non-accelerator resources (e.g., IMEX channels)
+  # These will be merged with accelerator claims when accelerator.dra is enabled
+  resourceClaims: []
+  # Example:
+  # - name: llm-d-imex-channel-0
+  #   resourceClaimTemplateName: llm-d-imex-channel-0
 
   # @schema
   # type: array
   # items:
   #   type: object
   #   additionalProperties: true
+  #   properties:
+  #     modelCommand:
+  #       type: string
+  #       enum: [furiosaLLMServe, custom]
   # @schema
   containers:
     - name: "furiosa-llm"
       image: "furiosaai/furiosa-llm:latest"
+      # type of command:
+      #   furiosaLLMServe - modelservice will add the command furiosa-llm serve to the container
+      #   custom - use user provided "command"
       modelCommand: furiosaLLMServe
       mountModelVolume: true
       # @schema
@@ -405,16 +556,6 @@ prefill:
   # Additional init containers to run before the main containers
   initContainers: []
 
-  # hostIPC -- Boolean: Use the host's ipc namespace.
-  # -- Not set by default.
-  # -- Only an option for LWS (multinode) See: https://github.com/kubernetes-sigs/lws/blob/main/config/crd/bases/leaderworkerset.x-k8s.io_leaderworkersets.yaml#L12196.
-  # hostIPC: false
-
-  # hostPID -- Boolean: Use the host's pid namespace.
-  # -- Not set by default.
-  # -- Only an option for LWS (multinode) See: https://github.com/kubernetes-sigs/lws/blob/main/config/crd/bases/leaderworkerset.x-k8s.io_leaderworkersets.yaml#L12207.
-  # hostPID: false
-
   # enableServiceLinks -- Boolean: Indicates whether information about services should be injected into pod's environment variables.
   # -- Not set by default (defaults to true if not specified).
   # enableServiceLinks: false
@@ -422,26 +563,6 @@ prefill:
   # terminationGracePeriodSeconds -- Duration in seconds the pod needs to terminate gracefully.
   # -- Not set by default (defaults to 30 seconds if not specified).
   # terminationGracePeriodSeconds: 60
-
-  # subGroupPolicy -- object: SubGroupPolicy describes the policy that will be applied when creating subgroups in each replica.
-  # -- Not set by default
-  # -- Only an option for LWS (multinode) See: https://github.com/kubernetes-sigs/lws/blob/main/config/crd/bases/leaderworkerset.x-k8s.io_leaderworkersets.yaml#L8207
-  # subGroupPolicy:
-  #   subGroupSize: 8
-
-  # subGroupExclusiveToplogy -- Boolean: Should the `subgroup-exclusive-topology` annotation be added to the LWS
-  # -- Not set by default
-  # -- Only an option for LWS (multinode)
-  # subGroupExclusiveToplogy: true
-
-  # XPU-specific node affinity
-  acceleratorTypes:
-    labelKey: ""
-    # @schema
-    # items:
-    #   type: string
-    # @schema
-    labelValues: []
 
   # @schema
   # additionalProperties: true
