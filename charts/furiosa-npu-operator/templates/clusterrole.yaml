@@ -7,76 +7,6 @@ metadata:
 rules:
   # Manager ClusterRole (config/rbac/role.yaml)
   - apiGroups:
-      - ""
-    resources:
-      - configmaps
-      - pods
-      - serviceaccounts
-      - services
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - events
-    verbs:
-      - create
-      - patch
-  - apiGroups:
-      - ""
-    resources:
-      - nodes
-    verbs:
-      - get
-      - list
-      - patch
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - pods/eviction
-    verbs:
-      - create
-  - apiGroups:
-      - apps
-    resources:
-      - controllerrevisions
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - apps
-    resources:
-      - daemonsets
-      - deployments
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - batch
-    resources:
-      - jobs
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
       - furiosa.ai
     resources:
       - furiosaclusterconfigs
@@ -105,31 +35,31 @@ rules:
   - apiGroups:
       - rbac.authorization.k8s.io
     resources:
-      - clusterrolebindings
       - clusterroles
-      - rolebindings
+      - clusterrolebindings
       - roles
+      - rolebindings
     verbs:
-      - create
-      - delete
       - get
       - list
-      - patch
-      - update
       - watch
+      - create
+      - update
+      - patch
+      - delete
   - apiGroups:
       - resource.k8s.io
     resources:
       - deviceclasses
       - resourceslices
     verbs:
-      - create
-      - delete
       - get
       - list
-      - patch
-      - update
       - watch
+      - create
+      - update
+      - patch
+      - delete
   - apiGroups:
       - resource.k8s.io
     resources:
@@ -142,6 +72,76 @@ rules:
       - resourceclaims/status
     verbs:
       - update
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - list
+      - patch
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - services
+      - configmaps
+      - serviceaccounts
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - pods/eviction
+    verbs:
+      - create
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+      - daemonsets
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - apps
+    resources:
+      - controllerrevisions
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
   # Metrics auth (config/rbac/metrics_auth_role.yaml)
   - apiGroups:
       - authentication.k8s.io
