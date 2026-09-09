@@ -11,12 +11,9 @@ rules:
     resources:
       - furiosaclusterconfigs
     verbs:
-      - create
-      - delete
       - get
       - list
       - patch
-      - update
       - watch
   - apiGroups:
       - furiosa.ai
@@ -29,31 +26,23 @@ rules:
     resources:
       - furiosaclusterconfigs/status
     verbs:
-      - get
       - patch
-      - update
   - apiGroups:
       - rbac.authorization.k8s.io
     resources:
       - clusterroles
       - clusterrolebindings
-      - roles
-      - rolebindings
     verbs:
-      - get
       - list
       - watch
       - create
-      - update
       - patch
       - delete
   - apiGroups:
       - resource.k8s.io
     resources:
       - deviceclasses
-      - resourceslices
     verbs:
-      - get
       - list
       - watch
       - create
@@ -66,6 +55,18 @@ rules:
       - resourceclaims
     verbs:
       - get
+  - apiGroups:
+      - resource.k8s.io
+    resources:
+      - resourceslices
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
   - apiGroups:
       - resource.k8s.io
     resources:
@@ -82,66 +83,12 @@ rules:
       - patch
       - watch
   - apiGroups:
-      - ""
+      - events.k8s.io
     resources:
       - events
     verbs:
       - create
       - patch
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-      - services
-      - configmaps
-      - serviceaccounts
-    verbs:
-      - get
-      - list
-      - watch
-      - create
-      - update
-      - patch
-      - delete
-  - apiGroups:
-      - ""
-    resources:
-      - pods/eviction
-    verbs:
-      - create
-  - apiGroups:
-      - apps
-    resources:
-      - deployments
-      - daemonsets
-    verbs:
-      - get
-      - list
-      - watch
-      - create
-      - update
-      - patch
-      - delete
-  - apiGroups:
-      - apps
-    resources:
-      - controllerrevisions
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - batch
-    resources:
-      - jobs
-    verbs:
-      - get
-      - list
-      - watch
-      - create
-      - update
-      - patch
-      - delete
   # Metrics auth (config/rbac/metrics_auth_role.yaml)
   - apiGroups:
       - authentication.k8s.io

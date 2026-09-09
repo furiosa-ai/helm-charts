@@ -6,17 +6,87 @@ metadata:
   labels:
     {{- include "furiosa-npu-operator.labels" . | nindent 4 }}
 rules:
-  # Leader election (config/rbac/leader_election_role.yaml)
+  # Manager and leader election permissions (config/rbac/role.yaml, config/rbac/leader_election_role.yaml)
   - apiGroups:
       - ""
     resources:
-      - configmaps
+      - pods
     verbs:
       - get
       - list
       - watch
       - create
       - update
+      - patch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - configmaps
+      - serviceaccounts
+    verbs:
+      - list
+      - watch
+      - create
+      - patch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - pods/eviction
+    verbs:
+      - create
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - apps
+    resources:
+      - daemonsets
+    verbs:
+      - list
+      - watch
+      - create
+      - patch
+      - delete
+  - apiGroups:
+      - apps
+    resources:
+      - controllerrevisions
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - rbac.authorization.k8s.io
+    resources:
+      - roles
+      - rolebindings
+    verbs:
+      - list
+      - watch
+      - create
       - patch
       - delete
   - apiGroups:
@@ -25,12 +95,8 @@ rules:
       - leases
     verbs:
       - get
-      - list
-      - watch
       - create
       - update
-      - patch
-      - delete
   - apiGroups:
       - ""
     resources:
