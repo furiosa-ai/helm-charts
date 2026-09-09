@@ -13,8 +13,11 @@ rules:
     verbs:
       - get
       - list
-      - patch
       - watch
+      - create
+      - update
+      - patch
+      - delete
   - apiGroups:
       - furiosa.ai
     resources:
@@ -26,16 +29,20 @@ rules:
     resources:
       - furiosaclusterconfigs/status
     verbs:
+      - get
       - patch
+      - update
   - apiGroups:
       - rbac.authorization.k8s.io
     resources:
       - clusterroles
       - clusterrolebindings
     verbs:
+      - get
       - list
       - watch
       - create
+      - update
       - patch
       - delete
   - apiGroups:
@@ -73,6 +80,7 @@ rules:
       - resourceclaims/status
     verbs:
       - update
+      - patch
   - apiGroups:
       - ""
     resources:
@@ -81,7 +89,15 @@ rules:
       - get
       - list
       - patch
+      - update
       - watch
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
   - apiGroups:
       - events.k8s.io
     resources:

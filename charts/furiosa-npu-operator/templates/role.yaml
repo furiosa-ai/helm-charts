@@ -26,9 +26,11 @@ rules:
       - configmaps
       - serviceaccounts
     verbs:
+      - get
       - list
       - watch
       - create
+      - update
       - patch
       - delete
   - apiGroups:
@@ -41,6 +43,8 @@ rules:
       - apps
     resources:
       - deployments
+      - daemonsets
+      - controllerrevisions
     verbs:
       - get
       - list
@@ -49,23 +53,6 @@ rules:
       - update
       - patch
       - delete
-  - apiGroups:
-      - apps
-    resources:
-      - daemonsets
-    verbs:
-      - list
-      - watch
-      - create
-      - patch
-      - delete
-  - apiGroups:
-      - apps
-    resources:
-      - controllerrevisions
-    verbs:
-      - list
-      - watch
   - apiGroups:
       - batch
     resources:
@@ -84,9 +71,11 @@ rules:
       - roles
       - rolebindings
     verbs:
+      - get
       - list
       - watch
       - create
+      - update
       - patch
       - delete
   - apiGroups:
@@ -95,10 +84,19 @@ rules:
       - leases
     verbs:
       - get
+      - list
+      - watch
       - create
       - update
   - apiGroups:
       - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+  - apiGroups:
+      - events.k8s.io
     resources:
       - events
     verbs:
