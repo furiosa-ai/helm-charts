@@ -2,10 +2,10 @@ name: Helm
 
 on:
   push:
-    paths: ["charts/**"]
+    paths: ["charts/**", ".github/workflows/examine_pr_changes.yml", ".github/workflows/kind_config/**"]
     branches: [ "main" ]
   pull_request:
-    paths: ["charts/**"]
+    paths: ["charts/**", ".github/workflows/examine_pr_changes.yml", ".github/workflows/kind_config/**"]
     branches: [ "main" ]
 
 jobs:
@@ -41,15 +41,16 @@ jobs:
           - v1.30.13
           - v1.31.14
           - v1.32.11
-          - v1.33.7
-          - v1.34.3
-          - v1.35.5
-          - v1.36.1
+          - v1.33.12
+          - v1.34.11
+          - v1.35.8
+          - v1.36.4
+          - v1.37.0
     steps:
       - name: checkout
         uses: actions/checkout@v6
       - name: create kind cluster
-        uses: helm/kind-action@v1.13.0
+        uses: helm/kind-action@v1.15.0
         with:
           cluster_name: helm-charts-test-${{ matrix.k8s-version }}
           config: .github/workflows/kind_config/kind_${{ matrix.k8s-version }}.yaml
