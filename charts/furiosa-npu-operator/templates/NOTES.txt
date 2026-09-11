@@ -1,0 +1,13 @@
+furiosa-npu-operator {{ .Chart.AppVersion }} has been deployed to namespace "{{ .Release.Namespace }}".
+
+IMPORTANT: this is a CLUSTER-SINGLETON operator. The CustomResourceDefinition is
+cluster-scoped. Install ONLY ONE release of this chart per cluster.
+
+Next steps: create a FuriosaClusterConfig to start managing NPU workloads. See the
+sample at config/samples/v1alpha1_furiosaclusterconfig.yaml in the operator repo, e.g.:
+
+    kubectl apply -f https://raw.githubusercontent.com/furiosa-ai/furiosa-npu-operator/main/config/samples/v1alpha1_furiosaclusterconfig.yaml
+
+Check operator status:
+
+    kubectl -n {{ .Release.Namespace }} rollout status deployment/{{ include "furiosa-npu-operator.fullname" . }}

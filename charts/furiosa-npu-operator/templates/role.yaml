@@ -1,13 +1,27 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ include "furiosa-npu-operator.fullname" . }}-leader-election
   namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "furiosa-npu-operator.labels" . | nindent 4 }}
 rules:
+  # Manager and leader election permissions (config/rbac/role.yaml, config/rbac/leader_election_role.yaml)
   - apiGroups:
       - ""
     resources:
       - pods
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
       - services
       - configmaps
       - serviceaccounts
@@ -74,5 +88,17 @@ rules:
       - watch
       - create
       - update
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
       - patch
-      - delete
+  - apiGroups:
+      - events.k8s.io
+    resources:
+      - events
+    verbs:
+      - create
+      - patch

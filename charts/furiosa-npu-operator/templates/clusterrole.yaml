@@ -1,20 +1,23 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ include "furiosa-npu-operator.fullname" . }}
+  labels:
+    {{- include "furiosa-npu-operator.labels" . | nindent 4 }}
 rules:
+  # Manager ClusterRole (config/rbac/role.yaml)
   - apiGroups:
       - furiosa.ai
     resources:
       - furiosaclusterconfigs
     verbs:
-      - create
-      - delete
       - get
       - list
-      - patch
-      - update
       - watch
+      - create
+      - update
+      - patch
+      - delete
   - apiGroups:
       - furiosa.ai
     resources:
@@ -46,7 +49,22 @@ rules:
       - resource.k8s.io
     resources:
       - deviceclasses
+    verbs:
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - resource.k8s.io
+    resources:
       - resourceclaims
+    verbs:
+      - get
+  - apiGroups:
+      - resource.k8s.io
+    resources:
       - resourceslices
     verbs:
       - get
@@ -80,6 +98,14 @@ rules:
     verbs:
       - create
       - patch
+  - apiGroups:
+      - events.k8s.io
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+  # Metrics auth (config/rbac/metrics_auth_role.yaml)
   - apiGroups:
       - authentication.k8s.io
     resources:
