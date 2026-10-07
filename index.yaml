@@ -427,6 +427,22 @@ entries:
     version: 2026.1.0-rc0
   llm-d-modelservice:
   - apiVersion: v2
+    appVersion: 2026.3.0
+    created: "2026-10-07T05:52:41.669794662Z"
+    dependencies:
+    - name: common
+      repository: https://charts.bitnami.com/bitnami
+      tags:
+      - bitnami-common
+      version: 2.27.0
+    description: A Helm chart for ModelService in llm-d
+    digest: a0f79baa7d5963444297010532bc0f5fb27d9a70efd27c4e4fec08895dfd29ec
+    name: llm-d-modelservice
+    type: application
+    urls:
+    - https://github.com/furiosa-ai/helm-charts/releases/download/2026.3.0/llm-d-modelservice-2026.3.0.tgz
+    version: 2026.3.0
+  - apiVersion: v2
     appVersion: 2026.1.0
     created: "2026-02-20T07:14:46.456422498Z"
     dependencies:
@@ -442,4 +458,4 @@ entries:
     urls:
     - https://github.com/furiosa-ai/helm-charts/releases/download/llm-d-modelservice-2026.1.0/llm-d-modelservice-2026.1.0.tgz
     version: 2026.1.0
-generated: "2026-06-25T07:40:39.316176883Z"
+generated: "2026-10-07T05:52:41.667384928Z"
