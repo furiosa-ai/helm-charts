@@ -65,4 +65,17 @@ jobs:
         run: |
           kubectl wait --for=condition=Ready nodes --all --timeout=300s
       - name: try install
-        run: ct install --chart-dirs charts --charts charts/furiosa-device-plugin,charts/furiosa-dra-driver,charts/furiosa-feature-discovery,charts/furiosa-metrics-exporter,charts/furiosa-npu-operator --namespace kube-system  --helm-extra-args '--timeout 500s'
+        env:
+          K8S_VERSION: ${{ matrix.k8s-version }}
+          # Keep in sync with `kubeVersion` in charts/furiosa-dra-driver/Chart.yaml
+          DRA_DRIVER_MIN_K8S_VERSION: v1.34.0
+        run: |
+          charts="charts/furiosa-device-plugin,charts/furiosa-feature-discovery,charts/furiosa-metrics-exporter,charts/furiosa-npu-operator"
+          # `sort -V -C` succeeds only if input is already in ascending version order,
+          # i.e. DRA_DRIVER_MIN_K8S_VERSION <= K8S_VERSION
+          if printf '%s\n' "${DRA_DRIVER_MIN_K8S_VERSION}" "${K8S_VERSION}" | sort -V -C; then
+            charts="${charts},charts/furiosa-dra-driver"
+          else
+            echo "Skipping charts/furiosa-dra-driver: requires Kubernetes >= ${DRA_DRIVER_MIN_K8S_VERSION}, cluster is ${K8S_VERSION}"
+          fi
+          ct install --chart-dirs charts --charts "${charts}" --namespace kube-system --helm-extra-args '--timeout 500s'
