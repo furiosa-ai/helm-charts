@@ -25,8 +25,19 @@ resources: {}
 
 node-feature-discovery:
   enabled: true
-  # add toleration as needed
-  # worker:
-  #   tolerations:
-  #     - key: "furiosa.ai/npu"
-  #       operator: "Exists"
+  worker:
+    # add toleration as needed
+    # tolerations:
+    #   - key: "furiosa.ai/npu"
+    #     operator: "Exists"
+    config:
+      core:
+        # - pci: feature.node.kubernetes.io/pci-1200_1ed2.present (NPU node affinity)
+        # - system: feature.node.kubernetes.io/system-os_release.{ID,VERSION_ID} (node OS)
+        # - kernel: feature.node.kubernetes.io/kernel-version.* (kernel the NPU driver is built for)
+        # - local: furiosa-feature-discovery labels written to features.d/
+        labelSources: ["pci", "system", "kernel", "local"]
+      sources:
+        pci:
+          deviceClassWhitelist: ["1200"]
+          deviceLabelFields: ["class", "vendor"]
