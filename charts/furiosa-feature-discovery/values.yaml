@@ -37,8 +37,35 @@ daemonSet:
 
 node-feature-discovery:
   enabled: true
-  # add toleration as needed
-  # worker:
-  #   tolerations:
-  #     - key: "furiosa.ai/npu"
-  #       operator: "Exists"
+  worker:
+    # add toleration as needed
+    # tolerations:
+    #   - key: "furiosa.ai/npu"
+    #     operator: "Exists"
+    config:
+      core:
+        # Only the label sources relevant to the Furiosa NPU stack:
+        # - pci: feature.node.kubernetes.io/pci-1200_1ed2.present (NPU node affinity)
+        # - system: feature.node.kubernetes.io/system-os_release.{ID,VERSION_ID} (node OS)
+        # - kernel: feature.node.kubernetes.io/kernel-version.* (kernel the NPU driver is built for)
+        # - local: furiosa-feature-discovery labels written to features.d/
+        # - custom: feature.node.kubernetes.io/memory-numa{,.node-count}, see sources.custom below
+        labelSources: ["pci", "system", "kernel", "local", "custom"]
+      sources:
+        pci:
+          deviceClassWhitelist: ["1200"]
+          deviceLabelFields: ["class", "vendor"]
+        # Emit only memory-numa instead of enabling the whole "memory" label source.
+        # Unlike the built-in "memory" source, single-NUMA nodes get memory-numa=false
+        # (not absent), so match on the value rather than Exists.
+        custom:
+          - name: "memory-numa"
+            # memory-numa=<is_numa> ("true"/"false"), memory-numa.node-count=<node_count>
+            labelsTemplate: |
+              {{ range .memory.numa }}{{ if eq .Name "is_numa" }}memory-numa={{ .Value }}{{ else }}memory-numa.node-count={{ .Value }}{{ end }}
+              {{ end }}
+            matchFeatures:
+              - feature: memory.numa
+                matchExpressions:
+                  is_numa: {op: Exists}
+                  node_count: {op: Exists}
